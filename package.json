@@ -58,6 +58,7 @@
                       "default": true
                     },
                     "button": {
+                      "description": "Settings for optional button in the status bar.",
                       "type": "object",
                       "properties": {
                         "color": {
@@ -193,6 +194,7 @@
                         "default": true
                       },
                       "button": {
+                        "description": "Settings for optional button in the status bar.",
                         "type": "object",
                         "properties": {
                           "color": {

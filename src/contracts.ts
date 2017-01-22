@@ -304,3 +304,10 @@ export interface ScriptCommandModule {
  */
 export interface ScriptCommandQuickPickItem extends vscode.QuickPickItem {
 }
+
+/**
+ * Describes a function that provides a value.
+ * 
+ * @return {TValue} The value.
+ */
+export type ValueProvider<TValue> = () => TValue;

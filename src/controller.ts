@@ -286,30 +286,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         let me = this;
         let cfg = me.config;
 
-        let commands: sc_contracts.ScriptCommand[] = [];
+        let commands: sc_contracts.ScriptCommand[];
         if (cfg.commands) {
             commands = sc_helpers.asArray(cfg.commands);
         }
 
-        commands = commands.filter(x => x);
-
-        commands.sort((x, y) => {
-            let sortX = x.sortOrder;
-            if (sc_helpers.isNullOrUndefined(sortX)) {
-                sortX = 0;
-            }
-            sortX = parseFloat(sc_helpers.toStringSafe(sortX).trim());
-
-            let sortY = y.sortOrder;
-            if (sc_helpers.isNullOrUndefined(sortY)) {
-                sortY = 0;
-            }
-            sortY = parseFloat(sc_helpers.toStringSafe(sortY).trim());
-
-            return sc_helpers.compareValues(sortX, sortY);
-        });
-
-        return commands;
+        return sc_helpers.sortCommands(commands);
     }
 
     /**

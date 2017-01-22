@@ -26,6 +26,7 @@
 import * as FS from 'fs';
 import * as Path from 'path';
 import * as Moment from 'moment';
+import * as sc_contracts from './contracts';
 import * as vscode from 'vscode';
 
 
@@ -143,6 +144,61 @@ export function log(msg: any) {
 
     msg = toStringSafe(msg);
     console.log(`[vs-script-commands :: ${now.format('YYYY-MM-DD HH:mm:ss')}] => ${msg}`);
+}
+
+/**
+ * Sorts a list of commands.
+ * 
+ * @param {deploy_contracts.ScriptCommand[]} pkgs The input list.
+ * @param {deploy_contracts.ValueProvider<string>} [nameProvider] The custom function that provides the name of the machine.
+ * 
+ * @return {deploy_contracts.ScriptCommand[]} The sorted list.
+ */
+export function sortCommands(pkgs: sc_contracts.ScriptCommand[],
+                             nameProvider?: sc_contracts.ValueProvider<string>): sc_contracts.ScriptCommand[] {
+    if (!pkgs) {
+        pkgs = [];
+    }
+
+    return pkgs.filter(x => x)
+               .map((x, i) => {
+                        let sortValue = x.sortOrder;
+                        if (isNullOrUndefined(sortValue)) {
+                            sortValue = 0;
+                        }
+                        sortValue = parseFloat(toStringSafe(sortValue).trim());
+
+                        if (isNaN(sortValue)) {
+                            sortValue = 0;
+                        }
+
+                        return {
+                            index: i,
+                            level0: sortValue,  // first sort by "sortOrder"
+                            level1: toStringSafe(x.displayName).toLowerCase().trim(),  // then by "displayName"
+                            level2: toStringSafe(x.id).toLowerCase().trim(),  // then by "ID"
+                            value: x,
+                        };
+                    })
+               .sort((x, y) => {
+                   let comp0 = compareValues(x.level0, y.level0);
+                   if (0 != comp0) {
+                       return comp0;
+                   }
+
+                   let comp1 = compareValues(x.level1, y.level1);
+                   if (0 != comp1) {
+                       return comp1;
+                   }
+
+                   let comp2 = compareValues(x.level2, y.level2);
+                   if (0 != comp2) {
+                       return comp2;
+                   }
+
+                   return compareValues(x.index, y.index);
+               })
+               .map(x => x.value);
 }
 
 /**

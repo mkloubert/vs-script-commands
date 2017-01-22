@@ -12,6 +12,7 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
       * [Commands](#commands-)
    * [Key bindinds](#key-bindinds-)
    * [Invoke manually](#invoke-manually-)
+   * [Status bar buttons](#status-bar-buttons-)
 3. [Documentation](#documentation-)
 
 ## Install [[&uarr;](#table-of-contents)]
@@ -81,6 +82,7 @@ A command entry provides the following properties:
 | ---- | --------- |
 | `askForArgument` | Defines if the GUI asks for an argument when invoke manually or not. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
+| `button` | Settings for optional [button](#status-bar-buttons-) in the status bar. |
 | `continueOnError` | Continue on error or cancel. Default `(true)` |
 | `description` | The description for the command. |
 | `displayName` | The custom display name. |
@@ -119,3 +121,27 @@ Press `F1` to open the list of commands and enter one of the following commands:
 | ---- | --------- |
 | `Script commands: Execute command` | Executes a command defined by that extension. |
 | `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. |
+
+### Status bar buttons [[&uarr;](#how-to-use-)]
+
+You can activate buttons for your commands in the status bar:
+
+```json
+{
+    "script.commands": {
+        "commands": [
+            {
+                "id": "mkloubert.mycommand",
+                "script": "./my-command.js",
+                
+                "button": {
+                    "text": "My command",
+                    "tooltip": "This is a tooltip for my command"
+                }
+            }
+        ]
+    }
+}
+```
+
+![Demo Status bar buttons](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo3.gif)

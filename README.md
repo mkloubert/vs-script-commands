@@ -111,10 +111,6 @@ After defining one or more commands, you can open your [keybindings.json](https:
 
 ![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)
 
-## Documentation [[&uarr;](#table-of-contents)]
-
-The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).
-
 ### Invoke manually [[&uarr;](#how-to-use-)]
 
 Press `F1` to open the list of commands and enter one of the following commands:
@@ -149,3 +145,7 @@ You can activate buttons for your commands in the status bar:
 ```
 
 ![Demo Status bar buttons](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo3.gif)
+
+## Documentation [[&uarr;](#table-of-contents)]
+
+The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).

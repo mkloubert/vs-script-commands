@@ -35,3 +35,28 @@ Add a `script.commands` section:
 ```
 
 #### Commands [[&uarr;](#settings-)]
+
+Define one or more command, by defining its `ID` and the script file (relative to your workspace) which should be executed:
+
+```json
+{
+    "script.commands": {
+        "commands": [
+            {
+                "id": "mkloubert.mycommand",
+                "script": "./my-command.js"
+            }
+        ]
+    }
+}
+```
+
+The `./my-command.js` file must have the following structure:
+
+```javascript
+function execute(args) {
+    // do the magic here
+}
+
+exports.compile = compile;
+```

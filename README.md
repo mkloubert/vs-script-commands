@@ -11,6 +11,7 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
    * [Settings](#settings-)
       * [Commands](#commands-)
    * [Key bindinds](#key-bindinds-)
+   * [Invoke manually](#invoke-manually-)
 3. [Documentation](#documentation-)
 
 ## Install [[&uarr;](#table-of-contents)]
@@ -105,3 +106,14 @@ After defining one or more commands, you can open your [keybindings.json](https:
 ## Documentation [[&uarr;](#table-of-contents)]
 
 The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).
+
+### Invoke manually [[&uarr;](#how-to-use-)]
+
+Press `F1` to open the list of commands and enter one of the following commands:
+
+![Demo Invoke manually](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo2.gif)
+
+| Name | Description |
+| ---- | --------- |
+| `Script commands: Execute command` | Executes a command defined by that extension. |
+| `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. |

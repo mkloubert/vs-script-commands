@@ -34,6 +34,12 @@ Add a `script.commands` section:
 }
 ```
 
+| Name | Description |
+| ---- | --------- |
+| `commands` | One or more [commands](#commands-) to register. |
+| `globals` | Global data available for ALL commands defined by that extension. |
+| `showOutput` | Open output on startup or not. Default `(true)` |
+
 #### Commands [[&uarr;](#settings-)]
 
 Define one or more command, by defining its `ID` and the script file (relative to your workspace) which should be executed:

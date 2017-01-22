@@ -1,4 +1,5 @@
+# Change Log (vs-script-commands)
 
-## [Unreleased]
+## 1.0.0 (January 23rd, 2017; first release)
 
-- Initial commit
+- first official release

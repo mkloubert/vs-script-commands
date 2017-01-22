@@ -1,0 +1,2 @@
+Icons:
+    - /icon.png (Vecteezy; https://www.iconfinder.com/Vecteezy; License: Creative Commons (Attribution-Share Alike 3.0 Unported))

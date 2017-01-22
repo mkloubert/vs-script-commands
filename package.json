@@ -1,53 +1,283 @@
 {
-    "name": "vs-script-commands",
-    "displayName": "Script Commands",
-    "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-    "version": "0.0.1",
-    "publisher": "mkloubert",
-    "engines": {
-        "vscode": "^1.5.0"
-    },
-    "license": "MIT",
-    "categories": [
-        "Other"
+  "name": "vs-script-commands",
+  "displayName": "Script Commands",
+  "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
+  "version": "0.1.0",
+  "publisher": "mkloubert",
+  "engines": {
+    "vscode": "^1.5.0"
+  },
+  "license": "MIT",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "Custom",
+    "Commands",
+    "Scripts",
+    "JavaScript",
+    "NodeJS"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/src/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.scriptCommands.execute",
+        "title": "Execute command",
+        "category": "Script commands"
+      },
+      {
+        "command": "extension.scriptCommands.executeVSCode",
+        "title": "Execute VSCode command",
+        "category": "Script commands"
+      }
     ],
-    "keywords": [
-        "Custom",
-        "Commands",
-        "Scripts",
-        "JavaScript",
-        "NodeJS"
-    ],
-    "activationEvents": [
-        "*"
-    ],
-    "main": "./out/src/extension",
-    "contributes": {
-        "commands": []
-    },
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0",
-        "mocha": "^2.3.3",
-        "@types/node": "^6.0.40",
-        "@types/mocha": "^2.2.32"
-    },
-    "icon": "icon.png",
-    "author": {
-        "name": "Marcel Joachim Kloubert"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/mkloubert/vs-script-commands"
-    },
-    "bugs": {
-        "url": "https://github.com/mkloubert/vs-script-commands/issues"
-    },
-    "readmeFilename": "README.md"
+    "configuration": {
+      "properties": {
+        "script.commands": {
+          "type": "object",
+          "properties": {
+            "commands": {
+              "description": "One or more command to register.",
+              "oneOf": [
+                {
+                  "type": "object",
+                  "description": "The command to register.",
+                  "properties": {
+                    "async": {
+                      "type": "boolean",
+                      "description": "Invokes command async or not.",
+                      "default": true
+                    },
+                    "continueOnError": {
+                      "type": "boolean",
+                      "description": "Continue on error or cancel.",
+                      "default": true
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "The description for the command."
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "description": "The custom display name."
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the command."
+                    },
+                    "onClose": {
+                      "type": "boolean",
+                      "description": "Executes the command on close or not.",
+                      "default": false
+                    },
+                    "onConfigChanged": {
+                      "type": "boolean",
+                      "description": "Is invoked after settings.json has been changed.",
+                      "default": false
+                    },
+                    "onEditorChanged": {
+                      "type": "boolean",
+                      "description": "Is invoked after a text editor changed.",
+                      "default": false
+                    },
+                    "onFileChanged": {
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been changed.",
+                      "default": false
+                    },
+                    "onFileClosed": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been closed.",
+                        "default": false
+                      },
+                    "onFileDeleted": {
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been deleted.",
+                      "default": false
+                    },
+                    "onFileOpened": {
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been opened.",
+                      "default": false
+                    },
+                    "onNewFile": {
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been created.",
+                      "default": false
+                    },
+                    "onSaved": {
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been saved.",
+                      "default": false
+                    },
+                    "onStartup": {
+                      "type": "boolean",
+                      "description": "Executes the command on startup or not.",
+                      "default": false
+                    },
+                    "options": {
+                      "type": "object",
+                      "description": "Additional data for the execution."
+                    },
+                    "script": {
+                      "type": "string",
+                      "description": "Is invoked when a file has been created.",
+                      "default": "./my-command.js"
+                    },
+                    "sortOrder": {
+                      "type": "number",
+                      "description": "The sort order.",
+                      "default": 0
+                    }
+                  },
+                  "required":[
+                    "id", "script"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "description": "The list of commands to register.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "async": {
+                        "type": "boolean",
+                        "description": "Invokes command async or not.",
+                        "default": true
+                      },
+                      "continueOnError": {
+                        "type": "boolean",
+                        "description": "Continue on error or cancel.",
+                        "default": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "The description for the command."
+                      },
+                      "displayName": {
+                        "type": "string",
+                        "description": "The custom display name."
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "The ID of the command."
+                      },
+                      "onClose": {
+                        "type": "boolean",
+                        "description": "Executes the command on close or not.",
+                        "default": false
+                      },
+                      "onConfigChanged": {
+                        "type": "boolean",
+                        "description": "Is invoked after settings.json has been changed.",
+                        "default": false
+                      },
+                      "onEditorChanged": {
+                        "type": "boolean",
+                        "description": "Is invoked after a text editor changed.",
+                        "default": false
+                      },
+                      "onFileChanged": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been changed.",
+                        "default": false
+                      },
+                      "onFileClosed": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been closed.",
+                        "default": false
+                      },
+                      "onFileDeleted": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been deleted.",
+                        "default": false
+                      },
+                      "onFileOpened": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been opened.",
+                        "default": false
+                      },
+                      "onNewFile": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been created.",
+                        "default": false
+                      },
+                      "onSaved": {
+                        "type": "boolean",
+                        "description": "Is invoked when a file has been saved.",
+                        "default": false
+                      },
+                      "onStartup": {
+                        "type": "boolean",
+                        "description": "Executes the command on startup or not.",
+                        "default": false
+                      },
+                      "options": {
+                        "type": "object",
+                        "description": "Additional data for the execution."
+                      },
+                      "script": {
+                        "type": "string",
+                        "description": "Is invoked when a file has been created.",
+                        "default": "./my-command.js"
+                      },
+                      "sortOrder": {
+                        "type": "number",
+                        "description": "The sort order.",
+                        "default": 0
+                      }
+                    },
+                    "required":[
+                      "id", "script"
+                    ]
+                  }
+                }
+              ]
+            },
+            "globals": {
+              "type": "object",
+              "description": "Global data available for ALL commands defined by that extension."
+            },
+            "showOutput": {
+              "type": "boolean",
+              "description": "Show output on startup or not.",
+              "default": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.3",
+    "vscode": "^1.0.0",
+    "mocha": "^2.3.3",
+    "@types/node": "^6.0.40",
+    "@types/mocha": "^2.2.32"
+  },
+  "icon": "icon.png",
+  "author": {
+    "name": "Marcel Joachim Kloubert"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkloubert/vs-script-commands"
+  },
+  "bugs": {
+    "url": "https://github.com/mkloubert/vs-script-commands/issues"
+  },
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "moment": "^2.17.1"
+  }
 }

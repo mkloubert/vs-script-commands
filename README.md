@@ -60,3 +60,26 @@ function execute(args) {
 
 exports.compile = compile;
 ```
+
+A command entry provides the following properties:
+
+| Name | Description |
+| ---- | --------- |
+| `async` | Invokes command async or not. Default `(true)` |
+| `continueOnError` | Continue on error or cancel. Default `(true)` |
+| `description` | The description for the command. |
+| `displayName` | The custom display name. |
+| `id` | The ID of the command. |
+| `onClose` | Executes the command on VSCode closes or not. Default `(false)` |
+| `onConfigChanged` | Is invoked after `settings.json` has been changed. Default `(false)` |
+| `onEditorChanged` | Is invoked after a text editor changed. Default `(false)` |
+| `onFileChanged` | Is invoked when a file has been changed. Default `(false)` |
+| `onFileClosed` | Is invoked when a file has been closed. Default `(false)` |
+| `onFileDeleted` | Is invoked when a file has been deleted. Default `(false)` |
+| `onFileOpened` | Is invoked when a file has been opened. Default `(false)` |
+| `onNewFile` | Is invoked when a file has been created. Default `(false)` |
+| `onSaved` | Is invoked when a file has been saved. Default `(false)` |
+| `onStartup` | Executes the command on startup or not. Default `(false)` |
+| `options` | Additional data for the execution. |
+| `script` | The path to the script to exeute. |
+| `sortOrder` | The sort order (for the GUI). Default `0` |

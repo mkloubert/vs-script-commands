@@ -1,5 +1,9 @@
 # vs-script-commands
 
+[![Latest Release](https://vsmarketplacebadge.apphb.com/version-short/mkloubert.vs-script-commands.svg)](https://marketplace.visualstudio.com/items?itemName=mkloubert.vs-script-commands)
+[![Installs](https://vsmarketplacebadge.apphb.com/installs/mkloubert.vs-script-commands.svg)](https://marketplace.visualstudio.com/items?itemName=mkloubert.vs-script-commands)
+[![Rating](https://vsmarketplacebadge.apphb.com/rating-short/mkloubert.vs-script-commands.svg)](https://marketplace.visualstudio.com/items?itemName=mkloubert.vs-script-commands#review-details)
+
 Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/) (VS Code) that uses scripts (JavaScript) for execution.
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=UHVN4LRJTEXQS) [![](https://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?fid=o62pkd&url=https%3A%2F%2Fgithub.com%2Fmkloubert%2Fvs-script-commands)

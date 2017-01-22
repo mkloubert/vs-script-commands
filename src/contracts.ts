@@ -118,6 +118,35 @@ export interface ScriptCommand {
      */
     async?: boolean;
     /**
+     * Settings for optional button in the status bar.
+     */
+    button?: {
+        /**
+         * The custom (text) color for the button.
+         */
+        color?: string;
+        /**
+         * Set button on the right side or not.
+         */
+        isRight?: boolean;
+        /**
+         * The custom priority.
+         */
+        priority?: number;
+        /**
+         * Show button on startup or not.
+         */
+        show?: boolean;
+        /**
+         * The caption for the button.
+         */
+        text?: string;
+        /**
+         * The tooltip for the button.
+         */
+        tooltip?: string;
+    },
+    /**
      * Continue on error or cancel.
      */
     continueOnError?: boolean;

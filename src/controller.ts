@@ -35,6 +35,9 @@ import * as vscode from 'vscode';
  * A script command entry.
  */
 export interface ScriptCommandEntry {
+    /**
+     * The additional status bar button.
+     */
     button?: vscode.StatusBarItem;
     /**
      * The command object.
@@ -664,6 +667,49 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                         }
                     });
 
+                    if (c.button) {
+                        // status bar button
+
+                        // right alignment?
+                        let alignment = vscode.StatusBarAlignment.Left;
+                        if (sc_helpers.toBooleanSafe(c.button.isRight)) {
+                            alignment = vscode.StatusBarAlignment.Right;
+                        }
+
+                        btn = vscode.window.createStatusBarItem(alignment);
+                        btn.command = cmdId;
+                        
+                        // caption
+                        if (sc_helpers.isEmptyString(c.button.text)) {
+                            btn.text = cmdId;
+                        }
+                        else {
+                            btn.text = sc_helpers.toStringSafe(c.button.text);
+                        }
+
+                        // tooltip
+                        if (sc_helpers.isEmptyString(c.button.tooltip)) {
+                            btn.tooltip = cmdId;
+                        }
+                        else {
+                            btn.tooltip = sc_helpers.toStringSafe(c.button.tooltip);
+                        }
+
+                        // color
+                        let color = sc_helpers.toStringSafe(c.button.color).toLowerCase().trim();
+                        if (color) {
+                            btn.color = color;
+                        }
+
+                        if (!sc_helpers.isNullOrUndefined(c.button.priority)) {
+                            btn.priority = parseFloat(sc_helpers.toStringSafe(c.button.priority).trim());
+                        }
+
+                        if (sc_helpers.toBooleanSafe(c.button.show, true)) {
+                            btn.show();
+                        }
+                    }
+
                     me._COMMANDS.push({
                         button: btn,
                         command: cmd,
@@ -671,6 +717,9 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                     });
                 }
                 catch (e) {
+                    sc_helpers.tryDispose(btn);
+                    sc_helpers.tryDispose(cmd);
+
                     me.log(`[ERROR] ScriptCommandController.reloadCommands(2)(${cmdId}): ${sc_helpers.toStringSafe(e)}`);
                 }
             });

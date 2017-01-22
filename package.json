@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.5.0"
@@ -56,6 +56,39 @@
                       "type": "boolean",
                       "description": "Invokes command async or not.",
                       "default": true
+                    },
+                    "button": {
+                      "type": "object",
+                      "properties": {
+                        "color": {
+                          "type": "string",
+                          "description": "The custom (text) color for the button.",
+                          "default": "#ffffff"
+                        },
+                        "isRight": {
+                          "type": "boolean",
+                          "description": "Set button on the right side or not.",
+                          "default": false
+                        },
+                        "priority": {
+                          "type": "number",
+                          "description": "The custom priority.",
+                          "default": 0
+                        },
+                        "show": {
+                          "type": "boolean",
+                          "description": "Show button on startup or not.",
+                          "default": true
+                        },
+                        "text": {
+                          "type": "string",
+                          "description": "The caption for the button."
+                        },
+                        "tooltip": {
+                          "type": "string",
+                          "description": "The tooltip for the button."
+                        }
+                      }
                     },
                     "continueOnError": {
                       "type": "boolean",
@@ -158,6 +191,39 @@
                         "type": "boolean",
                         "description": "Invokes command async or not.",
                         "default": true
+                      },
+                      "button": {
+                        "type": "object",
+                        "properties": {
+                          "color": {
+                            "type": "string",
+                            "description": "The custom (text) color for the button.",
+                            "default": "#ffffff"
+                          },
+                          "isRight": {
+                            "type": "boolean",
+                            "description": "Set button on the right side or not.",
+                            "default": false
+                          },
+                          "priority": {
+                            "type": "number",
+                            "description": "The custom priority.",
+                            "default": 0
+                          },
+                          "show": {
+                            "type": "boolean",
+                            "description": "Show button on startup or not.",
+                            "default": true
+                          },
+                          "text": {
+                            "type": "string",
+                            "description": "The caption for the button."
+                          },
+                          "tooltip": {
+                            "type": "string",
+                            "description": "The tooltip for the button."
+                          }
+                        }
                       },
                       "continueOnError": {
                         "type": "boolean",

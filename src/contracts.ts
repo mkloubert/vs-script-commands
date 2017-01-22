@@ -42,6 +42,10 @@ export interface Configuration {
      * Open output on startup or not.
      */
     showOutput?: boolean;
+    /**
+     * Show internal Visual Studio Code commands in GUI or not.
+     */
+    showInternalVSCommands?: boolean;
 }
 
 /**
@@ -105,6 +109,10 @@ export interface PackageFile {
  * A script command.
  */
 export interface ScriptCommand {
+    /**
+     * Defines if the GUI asks for an argument when invoke manually or not.
+     */
+    askForArgument?: boolean;
     /**
      * Invokes command async or not.
      */

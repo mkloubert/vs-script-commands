@@ -51,6 +51,10 @@ export interface ScriptCommandEntry {
  */
 export interface CommandEntry {
     /**
+     * Defines if the GUI asks for arguments or not.
+     */
+    askForArgument: boolean;
+    /**
      * The scription.
      */
     description: string;
@@ -143,6 +147,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     public executeCommand() {
         let entries: CommandEntry[] = this.getCommands().map(x => {
             let e: CommandEntry = {
+                askForArgument: sc_helpers.toBooleanSafe(x.askForArgument),
                 id: x.id,
                 label: x.id,
                 description: '',
@@ -259,16 +264,25 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      */
     public executeVSCommand() {
         let me = this;
+        let cfg = me.config;
 
-        vscode.commands.getCommands().then((commands) => {
+        let filterInternal = !sc_helpers.toBooleanSafe(cfg.showInternalVSCommands); 
+
+        vscode.commands.getCommands(filterInternal).then((commands) => {
             let entries = commands.map(x => {
                 let e: CommandEntry = {
+                    askForArgument: false,
                     id: x,
                     label: x,
                     description: '(VSCode command)',
                 };
 
                 return e;
+            });
+
+            entries.sort((x, y) => {
+                return sc_helpers.compareValues(sc_helpers.toStringSafe(x.id).toLowerCase().trim(),
+                                                sc_helpers.toStringSafe(x.id).toLowerCase().trim());
             });
 
             this.selectAndExecuteCommand(entries);
@@ -705,6 +719,9 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      * Selects a command and executes a command.
      */
     protected selectAndExecuteCommand(entries: CommandEntry[]) {
+        let me = this;
+        let cfg = me.config;
+
         let cmdId: string;
         let completed = (err?: any) => {
             if (err) {
@@ -733,7 +750,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 });
 
                 vscode.window.showQuickPick(quickPicks, {
-                    placeHolder: 'Select a command to execute...',
+                    placeHolder: `Select one of the ${entries.length} commands...`,
                 }).then((item) => {
                     if (!item) {
                         return;
@@ -741,18 +758,35 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
                     let args = [ item.entry.id ];
 
-                    try {
-                        vscode.commands.executeCommand.apply(null, args).then((result) => {
-                            let exitCode = parseInt(sc_helpers.toStringSafe(result).trim());
-                            if (!isNaN(exitCode)) {
-                                console.log(`[vs-script-commands] '${item.entry.id}' returned with exit code ${exitCode}`);
-                            }
+                    let executeTheCommand = () => {
+                        try {
+                            vscode.commands.executeCommand.apply(null, args).then((result) => {
+                                let exitCode = parseInt(sc_helpers.toStringSafe(result).trim());
+                                if (!isNaN(exitCode)) {
+                                    console.log(`[vs-script-commands] '${item.entry.id}' returned with exit code ${exitCode}`);
+                                }
+                            }, (err) => {
+                                completed(err);
+                            });
+                        }
+                        catch (e) {
+                            completed(e);
+                        }
+                    };
+
+                    if (item.entry.askForArgument) {
+                        vscode.window.showInputBox({
+                            placeHolder: 'Input the first argument for the execution here...',
+                        }).then((value) => {
+                            args = args.concat([ value ]);
+
+                            executeTheCommand();
                         }, (err) => {
                             completed(err);
                         });
                     }
-                    catch (e) {
-                        completed(e);
+                    else {
+                        executeTheCommand();
                     }
                 }, (err) => {
                     completed(err);

@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.5.0"
@@ -47,6 +47,11 @@
                   "type": "object",
                   "description": "The command to register.",
                   "properties": {
+                    "askForArgument": {
+                      "type": "boolean",
+                      "description": "Defines if the GUI asks for an argument when invoke manually or not.",
+                      "default": false
+                    },
                     "async": {
                       "type": "boolean",
                       "description": "Invokes command async or not.",
@@ -144,6 +149,11 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "askForArgument": {
+                        "type": "boolean",
+                        "description": "Defines if the GUI asks for an argument when invoke manually or not.",
+                        "default": false
+                      },
                       "async": {
                         "type": "boolean",
                         "description": "Invokes command async or not.",
@@ -245,6 +255,11 @@
             "showOutput": {
               "type": "boolean",
               "description": "Show output on startup or not.",
+              "default": false
+            },
+            "showInternalVSCommands": {
+              "type": "boolean",
+              "description": "Show internal Visual Studio Code commands in GUI or not.",
               "default": false
             }
           }

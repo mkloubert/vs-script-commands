@@ -73,7 +73,7 @@ function execute(args) {
     // do the magic here
 }
 
-exports.compile = compile;
+exports.execute = execute;
 ```
 
 The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface

@@ -11,7 +11,9 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
    * [Settings](#settings-)
       * [Commands](#commands-)
    * [Key bindinds](#key-bindinds-)
-   
+   * [Invoke manually](#invoke-manually-)
+3. [Documentation](#documentation-)
+
 ## Install [[&uarr;](#table-of-contents)]
 
 Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter:
@@ -40,6 +42,7 @@ Add a `script.commands` section:
 | `commands` | One or more [commands](#commands-) to register. |
 | `globals` | Global data available for ALL commands defined by that extension. |
 | `showOutput` | Open output on startup or not. Default `(true)` |
+| `showInternalVSCommands` | Open output on startup or not. Default `(false)` |
 
 #### Commands [[&uarr;](#settings-)]
 
@@ -76,6 +79,7 @@ A command entry provides the following properties:
 
 | Name | Description |
 | ---- | --------- |
+| `askForArgument` | Defines if the GUI asks for an argument when invoke manually or not. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
 | `continueOnError` | Continue on error or cancel. Default `(true)` |
 | `description` | The description for the command. |
@@ -101,4 +105,17 @@ After defining one or more commands, you can open your [keybindings.json](https:
 
 ![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)
 
+## Documentation [[&uarr;](#table-of-contents)]
 
+The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).
+
+### Invoke manually [[&uarr;](#how-to-use-)]
+
+Press `F1` to open the list of commands and enter one of the following commands:
+
+![Demo Invoke manually](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo2.gif)
+
+| Name | Description |
+| ---- | --------- |
+| `Script commands: Execute command` | Executes a command defined by that extension. |
+| `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. |

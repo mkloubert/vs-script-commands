@@ -42,6 +42,7 @@ Add a `script.commands` section:
 | `commands` | One or more [commands](#commands-) to register. |
 | `globals` | Global data available for ALL commands defined by that extension. |
 | `showOutput` | Open output on startup or not. Default `(true)` |
+| `showInternalVSCommands` | Open output on startup or not. Default `(false)` |
 
 #### Commands [[&uarr;](#settings-)]
 
@@ -78,6 +79,7 @@ A command entry provides the following properties:
 
 | Name | Description |
 | ---- | --------- |
+| `askForArguments` | Defines if the GUI asks for arguments when invoke manually. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
 | `continueOnError` | Continue on error or cancel. Default `(true)` |
 | `description` | The description for the command. |

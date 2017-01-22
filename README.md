@@ -97,6 +97,8 @@ A command entry provides the following properties:
 
 ### Key bindinds [[&uarr;](#how-to-use-)]
 
-After defining one or more commands, you can open your [keybindings.json](https://code.visualstudio.com/docs/customization/keybindings#_customizing-shortcuts) file and set shortcuts for them, by pressing `File > Preferences > Keyboard Shortcuts` (`Code > Preferences > Keyboard Shortcuts` on Mac):
+After defining one or more commands, you can open your [keybindings.json](https://code.visualstudio.com/docs/customization/keybindings#_customizing-shortcuts) file and set shortcuts for them, by selecting `File > Preferences > Keyboard Shortcuts` (`Code > Preferences > Keyboard Shortcuts` on Mac) in your editor:
 
 ![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)
+
+

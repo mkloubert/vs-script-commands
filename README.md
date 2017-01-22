@@ -10,6 +10,7 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
 2. [How to use](#how-to-use-)
    * [Settings](#settings-)
       * [Commands](#commands-)
+   * [Key bindinds](#key-bindinds-)
    
 ## Install [[&uarr;](#table-of-contents)]
 
@@ -93,3 +94,9 @@ A command entry provides the following properties:
 | `options` | Additional data for the execution. |
 | `script` | The path to the script to exeute. |
 | `sortOrder` | The sort order (for the GUI). Default `0` |
+
+### Key bindinds [[&uarr;](#how-to-use-)]
+
+After defining one or more commands, you can open your [keybindings.json](https://code.visualstudio.com/docs/customization/keybindings#_customizing-shortcuts) file and set shortcuts for them, by pressing `File > Preferences > Keyboard Shortcuts` (`Code > Preferences > Keyboard Shortcuts` on Mac):
+
+![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)

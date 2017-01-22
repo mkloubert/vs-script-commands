@@ -11,7 +11,8 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
    * [Settings](#settings-)
       * [Commands](#commands-)
    * [Key bindinds](#key-bindinds-)
-   
+3. [Documentation](#documentation-)
+
 ## Install [[&uarr;](#table-of-contents)]
 
 Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter:
@@ -101,4 +102,6 @@ After defining one or more commands, you can open your [keybindings.json](https:
 
 ![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)
 
+## Documentation [[&uarr;](#table-of-contents)]
 
+The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).

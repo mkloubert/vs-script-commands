@@ -79,7 +79,7 @@ A command entry provides the following properties:
 
 | Name | Description |
 | ---- | --------- |
-| `askForArguments` | Defines if the GUI asks for arguments when invoke manually. Default `(false)` |
+| `askForArgument` | Defines if the GUI asks for an argument when invoke manually or not. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
 | `continueOnError` | Continue on error or cancel. Default `(true)` |
 | `description` | The description for the command. |

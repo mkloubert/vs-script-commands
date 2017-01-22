@@ -67,6 +67,8 @@ function execute(args) {
 exports.compile = compile;
 ```
 
+The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
+
 You can return a number (sync execution), a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise) or nothing (default exit code `0`).
 
 A command entry provides the following properties:

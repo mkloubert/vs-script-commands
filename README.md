@@ -78,10 +78,13 @@ function execute(args) {
     var myModule = require('./myModule');
 
     // use the functions and classes provides by this extension
+    // s. https://mkloubert.github.io/vs-script-commands/modules/_helpers_.html
     var helpers = args.require('./helpers');
 
 
-    // do the magic here
+    var scriptFile = path.basename(__filename);
+
+    vscode.window.showInformationMessage('Hello from my extension: ' + scriptFile);
 }
 
 exports.execute = execute;

@@ -631,6 +631,19 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 },
                             };
 
+                            // args.button
+                            Object.defineProperty(args, 'button', {
+                                configurable: true,
+                                enumerable: true,
+                                get: () => { return btn; }, 
+                            });
+
+                            // args.globalState
+                            Object.defineProperty(args, 'globalState', {
+                                enumerable: true,
+                                get: () => { return globalState; }, 
+                            });
+
                             try {
                                 let result = cmdModule.execute(args);
                                 if (!sc_helpers.isNullOrUndefined(result)) {

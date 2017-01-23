@@ -243,6 +243,10 @@ export interface ScriptCommandExecutorArguments {
      */
     arguments: IArguments;
     /**
+     * The additional status bar button of the underlying command.
+     */
+    button?: vscode.StatusBarItem;
+    /**
      * The ID of the underlying command.
      */
     command: string;

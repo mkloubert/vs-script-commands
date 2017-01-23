@@ -77,7 +77,7 @@ function execute(args) {
     // import an own module
     var myModule = require('./myModule');
 
-    // use the functions and classes provides by this extension
+    // use the functions and classes provided by this extension
     // s. https://mkloubert.github.io/vs-script-commands/modules/_helpers_.html
     var helpers = args.require('./helpers');
 

@@ -124,7 +124,7 @@ Press `F1` to open the list of commands and enter one of the following commands:
 
 ### Status bar buttons [[&uarr;](#how-to-use-)]
 
-You can activate buttons for your commands in the status bar:
+You can activate buttons for your commands in the status bar, by defining the `button` property:
 
 ```json
 {
@@ -145,6 +145,15 @@ You can activate buttons for your commands in the status bar:
 ```
 
 ![Demo Status bar buttons](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo3.gif)
+
+| Name | Description |
+| ---- | --------- |
+| `color` | The custom (text) color for the button. |
+| `isRight` | Set button on the right side or not. Default `(false)` |
+| `priority` | The custom priority. |
+| `show` | Show button on startup or not. Default `(true)` |
+| `text` | The caption for the button. |
+| `tooltip` | The tooltip for the button. |
 
 ## Documentation [[&uarr;](#table-of-contents)]
 

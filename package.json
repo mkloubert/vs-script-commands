@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.5.0"
@@ -47,6 +47,10 @@
                   "type": "object",
                   "description": "The command to register.",
                   "properties": {
+                    "arguments": {
+                      "type": "array",
+                      "description": "One or more arguments for the callbacks."
+                    },
                     "askForArgument": {
                       "type": "boolean",
                       "description": "Defines if the GUI asks for an argument when invoke manually or not.",
@@ -171,6 +175,11 @@
                       "type": "number",
                       "description": "The sort order.",
                       "default": 0
+                    },
+                    "suppressArguments": {
+                      "type": "boolean",
+                      "description": "Supress own arguments of the extension or not.",
+                      "default": false
                     }
                   },
                   "required":[
@@ -183,6 +192,10 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "arguments": {
+                        "type": "array",
+                        "description": "One or more arguments for the callbacks."
+                      },
                       "askForArgument": {
                         "type": "boolean",
                         "description": "Defines if the GUI asks for an argument when invoke manually or not.",
@@ -307,6 +320,11 @@
                         "type": "number",
                         "description": "The sort order.",
                         "default": 0
+                      },
+                      "suppressArguments": {
+                        "type": "boolean",
+                        "description": "Supress own arguments of the extension or not.",
+                        "default": false
                       }
                     },
                     "required":[

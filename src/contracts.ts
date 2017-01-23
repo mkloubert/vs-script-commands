@@ -110,6 +110,10 @@ export interface PackageFile {
  */
 export interface ScriptCommand {
     /**
+     * One or more arguments for the callbacks.
+     */
+    arguments?: any[];
+    /**
      * Defines if the GUI asks for an argument when invoke manually or not.
      */
     askForArgument?: boolean;
@@ -214,6 +218,10 @@ export interface ScriptCommand {
      * The sort order.
      */
     sortOrder?: number;
+    /**
+     * Supress own arguments of the extension or not.
+     */
+    suppressArguments?: boolean;
 }
 
 /**

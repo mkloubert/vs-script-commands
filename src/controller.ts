@@ -54,6 +54,10 @@ export interface ScriptCommandEntry {
  */
 export interface CommandEntry {
     /**
+     * The list of additional arguments for the callback.
+     */
+    arguments: any[];
+    /**
      * Defines if the GUI asks for arguments or not.
      */
     askForArgument: boolean;
@@ -69,6 +73,10 @@ export interface CommandEntry {
      * The label.
      */
     label: string;
+    /**
+     * Supress own arguments or not.
+     */
+    suppressArguments: boolean;
 }
 
 /**
@@ -150,10 +158,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     public executeCommand() {
         let entries: CommandEntry[] = this.getCommands().map(x => {
             let e: CommandEntry = {
+                arguments: sc_helpers.asArray(x.arguments || []),
                 askForArgument: sc_helpers.toBooleanSafe(x.askForArgument),
+                description: '',
                 id: x.id,
                 label: x.id,
-                description: '',
+                suppressArguments: sc_helpers.toBooleanSafe(x.suppressArguments),
             };
 
             if (!sc_helpers.isEmptyString(x.displayName)) {
@@ -205,16 +215,19 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                     }
 
                     let c = commandsToExecute.shift();
+                    let cbArgs = sc_helpers.asArray(c.arguments || []);
                     let async = sc_helpers.toBooleanSafe(c.async, true);
                     let continueOnError = sc_helpers.toBooleanSafe(c.async, true);
+                    let suppressArguments = sc_helpers.toBooleanSafe(c.suppressArguments);
 
                     try {
                         let execArgs = [ c.id ];
-                        if (argsFactory) {
+                        if (!suppressArguments && argsFactory) {
                             let additionalArgs = argsFactory(c) || [];
 
                             execArgs = execArgs.concat(additionalArgs);
                         }
+                        execArgs = execArgs.concat(cbArgs);
 
                         vscode.commands.executeCommand.apply(null, execArgs).then((result) => {
                             let exitCode = parseInt(sc_helpers.toStringSafe(result).trim());
@@ -274,10 +287,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         vscode.commands.getCommands(filterInternal).then((commands) => {
             let entries = commands.map(x => {
                 let e: CommandEntry = {
+                    arguments: [],
                     askForArgument: false,
+                    description: '(VSCode command)',
                     id: x,
                     label: x,
-                    description: '(VSCode command)',
+                    suppressArguments: true,
                 };
 
                 return e;
@@ -818,7 +833,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                         return;
                     }
 
-                    let args = [ item.entry.id ];
+                    let args = [ item.entry.id ].concat(item.entry.arguments);
 
                     let executeTheCommand = () => {
                         try {

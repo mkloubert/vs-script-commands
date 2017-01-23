@@ -98,6 +98,7 @@ A command entry provides the following properties:
 
 | Name | Description |
 | ---- | --------- |
+| `arguments` | One or more arguments for the callbacks. |
 | `askForArgument` | Defines if the GUI asks for an argument when invoke manually or not. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
 | `button` | Settings for optional [button](#status-bar-buttons-) in the status bar. |
@@ -118,6 +119,7 @@ A command entry provides the following properties:
 | `options` | Additional data for the execution. |
 | `script` | The path to the script to exeute. |
 | `sortOrder` | The sort order (for the GUI). Default `0` |
+| `suppressArguments` | Supress own arguments of the extension or not. Default `(false)` |
 
 ### Key bindinds [[&uarr;](#how-to-use-)]
 

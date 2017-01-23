@@ -51,7 +51,7 @@ Add a `script.commands` section:
 | `commands` | One or more [commands](#commands-) to register. |
 | `globals` | Global data available for ALL commands defined by that extension. |
 | `showOutput` | Open output on startup or not. Default `(true)` |
-| `showInternalVSCommands` | Open output on startup or not. Default `(false)` |
+| `showInternalVSCommands` | Show internal Visual Studio Code commands in GUI or not. Default `(false)` |
 
 #### Commands [[&uarr;](#settings-)]
 

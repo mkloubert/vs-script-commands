@@ -70,13 +70,24 @@ The `./my-command.js` file must have the following structure:
 
 ```javascript
 function execute(args) {
+    // access VSCode API (s. https://code.visualstudio.com/Docs/extensionAPI/vscode-api)
+    var vscode = require('vscode');
+    // access any NodeJS API provided by VSCode (s. https://nodejs.org/api/)
+    var path = require('path');
+    // import an own module
+    var myModule = require('./myModule');
+
+    // use the functions and classes provides by this extension
+    var helpers = args.require('./helpers');
+
+
     // do the magic here
 }
 
 exports.execute = execute;
 ```
 
-The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
+The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface.
 
 You can return a number (sync execution), a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise) or nothing (default exit code `0`).
 

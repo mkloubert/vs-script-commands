@@ -27,6 +27,10 @@ Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter
 ext install vs-script-commands
 ```
 
+Or search for things like `vs-script-commands` in your editor:
+
+![Screenshot VSCode Extension search](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/screenshot1.png)
+
 ## How to use [[&uarr;](#table-of-contents)]
 
 ### Settings [[&uarr;](#how-to-use-)]
@@ -51,7 +55,7 @@ Add a `script.commands` section:
 
 #### Commands [[&uarr;](#settings-)]
 
-Define one or more command, by defining its `ID` and the script file (relative to your workspace) which should be executed:
+Define one or more command, by defining its `id` and the script file (relative to your workspace) which should be executed:
 
 ```json
 {

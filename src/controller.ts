@@ -300,7 +300,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
             entries.sort((x, y) => {
                 return sc_helpers.compareValues(sc_helpers.toStringSafe(x.id).toLowerCase().trim(),
-                                                sc_helpers.toStringSafe(x.id).toLowerCase().trim());
+                                                sc_helpers.toStringSafe(y.id).toLowerCase().trim());
             });
 
             this.selectAndExecuteCommand(entries);

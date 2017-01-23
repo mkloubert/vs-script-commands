@@ -604,8 +604,13 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
                 let btn: vscode.StatusBarItem;
                 let cmd: vscode.Disposable;
-                let commandState: any = {};
+
                 try {
+                    let commandState: any = {};
+                    if ((<Object>c).hasOwnProperty("commandState")) {
+                        commandState = sc_helpers.cloneObject(c.commandState);
+                    }
+
                     cmd = vscode.commands.registerCommand(cmdId, function() {
                         let args: sc_contracts.ScriptCommandExecutorArguments;
                         let completed = (err?: any, exitCode?: number) => {

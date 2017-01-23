@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.5.0"
@@ -99,6 +99,10 @@
                       "type": "boolean",
                       "description": "Continue on error or cancel.",
                       "default": true
+                    },
+                    "commandState": {
+                      "description": "The initial value for ScriptCommandExecutorArguments.commandState property.",
+                      "default": {}
                     },
                     "description": {
                       "type": "string",
@@ -238,6 +242,10 @@
                             "description": "The tooltip for the button."
                           }
                         }
+                      },
+                      "commandState": {
+                        "description": "The initial value for ScriptCommandExecutorArguments.commandState property.",
+                        "default": {}
                       },
                       "continueOnError": {
                         "type": "boolean",

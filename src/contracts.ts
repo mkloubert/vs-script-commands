@@ -151,6 +151,10 @@ export interface ScriptCommand {
         tooltip?: string;
     },
     /**
+     * The initial value for ScriptCommandExecutorArguments.commandState property.
+     */
+    commandState?: any;
+    /**
      * Continue on error or cancel.
      */
     continueOnError?: boolean;

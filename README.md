@@ -106,6 +106,7 @@ A command entry provides the following properties:
 | `askForArgument` | Defines if the GUI asks for an argument when invoke manually or not. Default `(false)` |
 | `async` | Invokes command async or not. Default `(true)` |
 | `button` | Settings for optional [button](#status-bar-buttons-) in the status bar. |
+| `commandState` | The initial value for [commandState](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#commandstate) property. Default `{}` |
 | `continueOnError` | Continue on error or cancel. Default `(true)` |
 | `description` | The description for the command. |
 | `displayName` | The custom display name. |

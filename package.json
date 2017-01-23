@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.5.0"
@@ -163,7 +163,6 @@
                       "default": false
                     },
                     "options": {
-                      "type": "object",
                       "description": "Additional data for the execution."
                     },
                     "script": {
@@ -308,7 +307,6 @@
                         "default": false
                       },
                       "options": {
-                        "type": "object",
                         "description": "Additional data for the execution."
                       },
                       "script": {
@@ -335,7 +333,6 @@
               ]
             },
             "globals": {
-              "type": "object",
               "description": "Global data available for ALL commands defined by that extension."
             },
             "showOutput": {

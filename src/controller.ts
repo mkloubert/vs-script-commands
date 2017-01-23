@@ -303,7 +303,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                 sc_helpers.toStringSafe(y.id).toLowerCase().trim());
             });
 
-            this.selectAndExecuteCommand(entries);
+            me.selectAndExecuteCommand(entries);
         }, (err) => {
             me.log(`[ERROR] ScriptCommandController.executeVSCommand(1): ${sc_helpers.toStringSafe(err)}`);
         });
@@ -906,7 +906,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
             catch (e) {
                 sc_helpers.tryDispose(newWatcher);
 
-                this.log(`[ERROR] ScriptCommandController.setupFileSystemWatcher(2): ${sc_helpers.toStringSafe(e)}`);
+                me.log(`[ERROR] ScriptCommandController.setupFileSystemWatcher(2): ${sc_helpers.toStringSafe(e)}`);
             }
         };
 

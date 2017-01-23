@@ -666,9 +666,9 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                         completed(null, result);
                                     }
                                     else {
-                                        let p = <Promise<number>>result;
+                                        let t = <Thenable<number>>result;
 
-                                        p.then((exitCode) => {
+                                        t.then((exitCode) => {
                                             if (sc_helpers.isEmptyString(exitCode)) {
                                                 exitCode = 0;
                                             }
@@ -677,7 +677,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                             }
 
                                             completed(null, exitCode);
-                                        }).catch((err) => {
+                                        }, (err) => {
                                             completed(err);
                                         });
                                     }

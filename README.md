@@ -138,10 +138,10 @@ Press `F1` to open the list of commands and enter one of the following commands:
 
 ![Demo Invoke manually](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo2.gif)
 
-| Name | Command | Description |
+| Name | Description | | Command
 | ---- | ---- | --------- |
-| `Script commands: Execute command` | `extension.scriptCommands.execute` | Executes a command defined by that extension. |
-| `Script commands: Execute VSCode command` | `extension.scriptCommands.executeVSCode` | Executes another command that is available in VSCode. |
+| `Script commands: Execute command` | Executes a command defined by that extension. | `extension.scriptCommands.execute` |
+| `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. | `extension.scriptCommands.executeVSCode` |
 
 ### Status bar buttons [[&uarr;](#how-to-use-)]
 

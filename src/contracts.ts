@@ -266,20 +266,32 @@ export interface ScriptCommandExecutorArguments {
      * Defines data that should be keeped while the current session
      * and is available for ONLY for current command.
      */
-    commandState?: any;
+    commandState: any;
+    /**
+     * Gets the context of that extension.
+     */
+    readonly extension: vscode.ExtensionContext;
     /**
      * The global variables from the settings.
      */
-    globals?: GlobalVariables;
+    globals: GlobalVariables;
     /**
      * Defines data that should be keeped while the current session
      * and is available for ALL commands defined by that extension.
      */
-    globalState?: any;
+    readonly globalState: any;
+    /**
+     * Gets or sets the value for the next execution.
+     */
+    nextValue: any;
     /**
      * Options for the execution (@see ScriptCommand).
      */
     options?: any;
+    /**
+     * Gets the value from the previous execution.
+     */
+    readonly previousValue: any;
     /**
      * Loads a module from the script context.
      * 

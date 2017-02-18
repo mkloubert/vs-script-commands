@@ -605,6 +605,8 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 let btn: vscode.StatusBarItem;
                 let cmd: vscode.Disposable;
 
+                let prevVal: any;
+
                 try {
                     let commandState: any = {};
                     if ((<Object>c).hasOwnProperty("commandState")) {
@@ -613,23 +615,28 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
                     cmd = vscode.commands.registerCommand(cmdId, function() {
                         let args: sc_contracts.ScriptCommandExecutorArguments;
-                        let completed = (err?: any, exitCode?: number) => {
-                            if (err) {
-                                vscode.window.showErrorMessage(`[vs-script-commands] Execution of ${cmdId} failed: ${sc_helpers.toStringSafe(err)}`);
-                            }
-                            else {
-                                if (sc_helpers.isNullOrUndefined(exitCode)) {
-                                    exitCode = 0;
+                        let completed = (err?: any, exitCode?: number, nv?: any) => {
+                            try {
+                                if (err) {
+                                    vscode.window.showErrorMessage(`[vs-script-commands] Execution of ${cmdId} failed: ${sc_helpers.toStringSafe(err)}`);
+                                }
+                                else {
+                                    if (sc_helpers.isNullOrUndefined(exitCode)) {
+                                        exitCode = 0;
+                                    }
+                                }
+
+                                if (!sc_helpers.isNullOrUndefined(exitCode)) {
+                                    console.log(`[vs-script-commands] '${cmdId}' returned with exit code ${exitCode}`);
                                 }
                             }
+                            finally {
+                                if (args) {
+                                    commandState = args.commandState;
+                                    globalState = args.globalState;
+                                }
 
-                            if (!sc_helpers.isNullOrUndefined(exitCode)) {
-                                console.log(`[vs-script-commands] '${cmdId}' returned with exit code ${exitCode}`);
-                            }
-
-                            if (args) {
-                                commandState = args.commandState;
-                                globalState = args.globalState;
+                                prevVal = nv;
                             }
                         };
 
@@ -642,10 +649,15 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
                             args = {
                                 arguments: arguments,
+                                button: undefined,
                                 command: cmdId,
                                 commandState: commandState,
+                                extension: undefined,
                                 globals: me.getGlobals(),
+                                globalState: undefined,
+                                nextValue: undefined,
                                 options: sc_helpers.cloneObject(c.options),
+                                previousValue: undefined,
                                 require: function(id) {
                                     return require(id);
                                 },
@@ -658,17 +670,29 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 get: () => { return btn; }, 
                             });
 
+                            // args.extension
+                            Object.defineProperty(args, 'extension', {
+                                enumerable: true,
+                                get: () => { return me._CONTEXT; }, 
+                            });
+
                             // args.globalState
                             Object.defineProperty(args, 'globalState', {
                                 enumerable: true,
                                 get: () => { return globalState; }, 
                             });
 
+                            // args.previousValue
+                            Object.defineProperty(args, 'previousValue', {
+                                enumerable: true,
+                                get: () => { return prevVal; }, 
+                            });
+
                             try {
                                 let result = cmdModule.execute(args);
                                 if (!sc_helpers.isNullOrUndefined(result)) {
                                     if ('number' === typeof result) {
-                                        completed(null, result);
+                                        completed(null, result, args.nextValue);
                                     }
                                     else {
                                         let t = <Thenable<number>>result;
@@ -681,18 +705,18 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                 exitCode = parseInt(sc_helpers.toStringSafe(exitCode).trim());
                                             }
 
-                                            completed(null, exitCode);
+                                            completed(null, exitCode, args.nextValue);
                                         }, (err) => {
-                                            completed(err);
+                                            completed(err, null, args.nextValue);
                                         });
                                     }
                                 }
                                 else {
-                                    completed();
+                                    completed(null, null, args.nextValue);
                                 }
                             }
                             catch (e) {
-                                completed(e);
+                                completed(e, null, args.nextValue);
                             }
                         }
                         catch (e) {

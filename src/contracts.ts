@@ -23,6 +23,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+import * as Events from 'events';
 import * as vscode from 'vscode';
 
 
@@ -151,6 +152,10 @@ export interface ScriptCommand {
         tooltip?: string;
     },
     /**
+     * Cache script or not.
+     */
+    cached?: boolean;
+    /**
      * The initial value for ScriptCommandExecutorArguments.commandState property.
      */
     commandState?: any;
@@ -267,6 +272,10 @@ export interface ScriptCommandExecutorArguments {
      * and is available for ONLY for current command.
      */
     commandState: any;
+    /**
+     * Gets the event emitter that can be used by ALL commands.
+     */
+    readonly events: Events.EventEmitter;
     /**
      * Gets the context of that extension.
      */

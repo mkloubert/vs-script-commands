@@ -1,5 +1,10 @@
 # Change Log (vs-script-commands)
 
+## 1.6.0 (February 18th, 2017; command events)
+
+* added [events](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#events) property, that can handle events for all commands created by that extension
+* added [cached](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommand.html#cached) property
+
 ## 1.5.0 (February 18th, 2017; extension context and sharing data between two executions)
 
 * added [previousValue](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#previousvalue) and [nextValue](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#nextvalue) properties that can share data between two executions

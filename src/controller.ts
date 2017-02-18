@@ -117,6 +117,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      * Stores the package file of that extension.
      */
     protected _PACKAGE_FILE: sc_contracts.PackageFile;
+    /**
+     * Stores the event emitter for scripts.
+     */
+    protected _scriptEvents: Events.EventEmitter;
 
     /**
      * Initializes a new instance of that class.
@@ -595,9 +599,23 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 sc_helpers.tryDispose(oldCmd.button);
             }
 
+            let oldEventEmitter = me._scriptEvents;
+            if (oldEventEmitter) {
+                try {
+                    oldEventEmitter.removeAllListeners();
+                }
+                catch (e) {
+                    me.log(`[ERROR] ScriptCommandController.reloadCommands(3): ${sc_helpers.toStringSafe(e)}`);
+                }
+            }
+            oldEventEmitter = undefined;
+
             let newCommands = me.getCommands();
 
             let globalState: any = {};
+
+            let newEventEmitter = new Events.EventEmitter();
+            me._scriptEvents = newEventEmitter;
 
             newCommands.forEach(c => {
                 let cmdId = sc_helpers.toStringSafe(c.id);
@@ -606,6 +624,8 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 let cmd: vscode.Disposable;
 
                 let prevVal: any;
+
+                let doCacheScript = sc_helpers.toBooleanSafe(c.cached);
 
                 try {
                     let commandState: any = {};
@@ -641,7 +661,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                         };
 
                         try {
-                            let cmdModule = sc_helpers.loadModule<sc_contracts.ScriptCommandModule>(c.script);
+                            let cmdModule = sc_helpers.loadModule<sc_contracts.ScriptCommandModule>(c.script, doCacheScript);
                             if (!cmdModule.execute) {
                                 completed();
                                 return;  // no execute() function found
@@ -652,6 +672,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 button: undefined,
                                 command: cmdId,
                                 commandState: commandState,
+                                events: undefined,
                                 extension: undefined,
                                 globals: me.getGlobals(),
                                 globalState: undefined,
@@ -668,6 +689,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 configurable: true,
                                 enumerable: true,
                                 get: () => { return btn; }, 
+                            });
+
+                            // args.events
+                            Object.defineProperty(args, 'events', {
+                                enumerable: true,
+                                get: () => { return newEventEmitter; }, 
                             });
 
                             // args.extension

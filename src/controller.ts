@@ -687,6 +687,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 extension: undefined,
                                 globals: me.getGlobals(),
                                 globalState: undefined,
+                                log: function(msg) {
+                                    me.log(msg);
+                                    return this;
+                                },
                                 nextValue: undefined,
                                 openHtml: (html, title, docId) => {
                                     return sc_helpers.openHtmlDocument(me.htmlDocuments,

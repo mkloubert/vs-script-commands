@@ -316,6 +316,14 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly globalState: any;
     /**
+     * Logs a message.
+     * 
+     * @param {any} msg The message to log.
+     * 
+     * @chainable
+     */
+    readonly log: (msg: any) => ScriptCommandExecutorArguments;
+    /**
      * Gets or sets the value for the next execution.
      */
     nextValue: any;

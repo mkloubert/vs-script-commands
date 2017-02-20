@@ -122,6 +122,9 @@ exports.execute = function (args) {
     // emit 'myCommandEvent' event (s. above)
     args.events.emit('myCommandEvent', 'William Henry Gates');
 
+    // logs a message to output window / channel
+    args.log('A log message');
+
 
     var scriptFile = path.basename(__filename);
 

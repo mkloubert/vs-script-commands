@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 1.10.0 (February 20th, 2017; deploy files)
+
+* added [deploy](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#deploy) method to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) which make use of `extension.deploy.filesTo` command, provided by [vs-deploy](https://github.com/mkloubert/vs-deploy) extension
+
 ## 1.9.0 (February 20th, 2017; output channel)
 
 * added [outputChannel](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#outputChannel) property to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) that gets the [OutputChannel](https://code.visualstudio.com/Docs/extensionAPI/vscode-api#OutputChannel) instance of that extension

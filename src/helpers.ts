@@ -119,6 +119,23 @@ export function createSimplePromiseCompletedAction<TResult>(resolve: (value?: TR
 }
 
 /**
+ * Removes duplicate entries from an array.
+ * 
+ * @param {T[]} arr The input array.
+ * 
+ * @return {T[]} The filtered array.
+ */
+export function distinctArray<T>(arr: T[]): T[] {
+    if (!arr) {
+        return arr;
+    }
+
+    return arr.filter((x, i) => {
+        return arr.indexOf(x) === i;
+    });
+}
+
+/**
  * Returns the value from a "parameter" object.
  * 
  * @param {Object} params The object.

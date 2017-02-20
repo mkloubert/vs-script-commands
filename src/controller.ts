@@ -683,6 +683,34 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 button: undefined,
                                 command: cmdId,
                                 commandState: commandState,
+                                deploy: (files, targets) => {
+                                    // files
+                                    files = sc_helpers.asArray(files)
+                                                      .map(x => sc_helpers.toStringSafe(x))
+                                                      .filter(x => !sc_helpers.isEmptyString(x));
+                                    files = sc_helpers.distinctArray(files);
+
+                                    // targets
+                                    targets = sc_helpers.asArray(targets)
+                                                        .map(x => sc_helpers.normalizeString(x))
+                                                        .filter(x => x);
+                                    targets = sc_helpers.distinctArray(targets);
+
+                                    return new Promise<any>((resolve, reject) => {
+                                        let completed = sc_helpers.createSimplePromiseCompletedAction(resolve, reject);
+
+                                        try {
+                                            vscode.commands.executeCommand('extension.deploy.filesTo', files, targets).then((result) => {
+                                                completed(null, result);
+                                            }, (err) => {
+                                                completed(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            completed(e);
+                                        }
+                                    });
+                                },
                                 events: undefined,
                                 extension: undefined,
                                 globals: me.getGlobals(),

@@ -125,6 +125,10 @@ exports.execute = function (args) {
     // logs a message to output window / channel
     args.log('A log message');
 
+    // write to output channel of that extension
+    // s. https://code.visualstudio.com/Docs/extensionAPI/vscode-api#OutputChannel
+    args.outputChannel.appendLine('A message for the output channel.');
+
 
     var scriptFile = path.basename(__filename);
 

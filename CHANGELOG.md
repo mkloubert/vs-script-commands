@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 1.9.0 (February 20th, 2017; output channel)
+
+* added [outputChannel](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#outputChannel) property to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) that gets the [OutputChannel](https://code.visualstudio.com/Docs/extensionAPI/vscode-api#OutputChannel) instance of that extension
+
 ## 1.8.0 (February 20th, 2017; log() method)
 
 * added [log()](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#log) method to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) that writes log messages to output window / channel

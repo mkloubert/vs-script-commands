@@ -697,6 +697,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                                        html, title, docId);
                                 },
                                 options: sc_helpers.cloneObject(c.options),
+                                outputChannel: undefined,
                                 previousValue: undefined,
                                 require: function(id) {
                                     return require(id);
@@ -726,6 +727,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                             Object.defineProperty(args, 'globalState', {
                                 enumerable: true,
                                 get: () => { return globalState; }, 
+                            });
+
+                            // args.outputChannel
+                            Object.defineProperty(args, 'outputChannel', {
+                                enumerable: true,
+                                get: () => { return me.outputChannel; }, 
                             });
 
                             // args.previousValue

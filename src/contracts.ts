@@ -342,6 +342,10 @@ export interface ScriptCommandExecutorArguments {
      */
     options?: any;
     /**
+     * Gets the output channel that can be used by the underlying script.
+     */
+    readonly outputChannel: vscode.OutputChannel;
+    /**
      * Gets the value from the previous execution.
      */
     readonly previousValue: any;

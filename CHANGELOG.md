@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 1.7.0 (February 20th, 2017; open HTML documents)
+
+* added [openHtml](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#openhtml) method to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) which can open HTML documents in a new tab
+
 ## 1.6.0 (February 18th, 2017; command events)
 
 * added [events](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#events) property, that can handle events for all commands created by that extension

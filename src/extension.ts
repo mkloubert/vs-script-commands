@@ -27,6 +27,7 @@
 
 import * as FS from 'fs';
 import * as Path from 'path';
+import * as sc_content from './content';
 import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
@@ -85,6 +86,35 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // open HTML document
+    let openHtmlDoc = vscode.commands.registerCommand('extension.scriptCommands.openHtmlDoc', (doc: sc_contracts.Document) => {
+        try {
+            let htmlDocs = controller.htmlDocuments;
+
+            let url = vscode.Uri.parse(`vs-script-commands-html://authority/?id=${encodeURIComponent(sc_helpers.toStringSafe(doc.id))}` + 
+                                       `&x=${encodeURIComponent(sc_helpers.toStringSafe(new Date().getTime()))}`);
+
+            let title = sc_helpers.toStringSafe(doc.title).trim();
+            if (!title) {
+                title = `[vs-script-commands] HTML document #${sc_helpers.toStringSafe(doc.id)}`;
+            }
+
+            vscode.commands.executeCommand('vscode.previewHtml', url, vscode.ViewColumn.One, title).then((success) => {
+                sc_helpers.removeDocuments(doc, htmlDocs);
+            }, (err) => {
+                sc_helpers.removeDocuments(doc, htmlDocs);
+
+                sc_helpers.log(`[ERROR] extension.scriptCommands.openHtmlDoc(2): ${err}`);
+            });
+        }
+        catch (e) {
+            sc_helpers.log(`[ERROR] extension.scriptCommands.openHtmlDoc(1): ${e}`);
+        }
+    });
+
+    let htmlViewer = vscode.workspace.registerTextDocumentContentProvider('vs-script-commands-html',
+                                                                          new sc_content.HtmlTextDocumentContentProvider(controller));
+
     // notfiy setting changes
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(controller.onDidChangeConfiguration,
                                                                          controller));
@@ -102,7 +132,8 @@ export function activate(context: vscode.ExtensionContext) {
                                                                         controller));
 
     context.subscriptions.push(controller,
-                               executeCmd, executeVSCmd);
+                               executeCmd, executeVSCmd, openHtmlDoc,
+                               htmlViewer);
 
     controller.onActivated();
 }

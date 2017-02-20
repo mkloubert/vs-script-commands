@@ -70,14 +70,16 @@ Define one or more command, by defining its `id` and the script file (relative t
 }
 ```
 
-The `./my-command.js` file must have the following structure:
+The `./my-command.js` must have a public / exported `execute()` function:
 
 ```javascript
-function execute(args) {
+exports.execute = function (args) {
     // access VSCode API (s. https://code.visualstudio.com/Docs/extensionAPI/vscode-api)
     var vscode = require('vscode');
+
     // access any NodeJS API provided by VSCode (s. https://nodejs.org/api/)
     var path = require('path');
+
     // import an own module
     var myModule = require('./myModule');
 
@@ -85,13 +87,53 @@ function execute(args) {
     // s. https://mkloubert.github.io/vs-script-commands/modules/_helpers_.html
     var helpers = args.require('./helpers');
 
+    // access a module that is part of the extentsion
+    // s. https://github.com/mkloubert/vs-script-commands/blob/master/package.json
+    var moment = args.require('moment');
+
+    // access the global data from the settings
+    var globals = args.globals;
+
+    // access the data of the entry from the settings
+    var opts = args.options;
+
+    // share / store data (while current session)...
+    // ... for this script
+    args.commandState = new Date();
+    // ... with other scripts
+    args.globalState['myCommand'] = new Date();
+
+    // access permanent data storages
+    // s. https://github.com/Microsoft/vscode/blob/master/src/vs/workbench/common/memento.ts
+    var myAppWideValue = args.extension.globalState.get('myAppValue');  // app wide
+    args.extension.workspaceState.update('myWorkspaceValue', 'New workspace wide value');  // workspace wide
+
+    // share data between two executions
+    var prevVal = args.previousValue;  // data from the previous execution
+    args.nextValue = 'This is a value only for the next execution';  // data for the next execution
+
+    // registers for a one-time event
+    args.events.once('myCommandEvent', function(v) {
+        // 'v' should be 'William Henry Gates'
+        // if upcoming 'args.events.emit()' is called
+        args.log("From 'myCommandEvent': " + v);
+    });
+
+    // emit 'myCommandEvent' event (s. above)
+    args.events.emit('myCommandEvent', 'William Henry Gates');
+
 
     var scriptFile = path.basename(__filename);
 
+    // open HTML document in new tab (for reports e.g.)
+    args.openHtml('Hello from my extension: ' + scriptFile, 'My HTML document').then(function() {
+        // HTML opened
+    }, function(err) {
+        // opening HTML document failed
+    });
+
     vscode.window.showInformationMessage('Hello from my extension: ' + scriptFile);
 }
-
-exports.execute = execute;
 ```
 
 The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface.

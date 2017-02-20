@@ -50,6 +50,32 @@ export interface Configuration {
 }
 
 /**
+ * A document.
+ */
+export interface Document {
+    /**
+     * The body / content of the document.
+     */
+    body: Buffer;
+    /**
+     * The encoding.
+     */
+    encoding?: string;
+    /**
+     * The ID.
+     */
+    id?: any;
+    /**
+     * The MIME type.
+     */
+    mime?: string;
+    /**
+     * The title.
+     */
+    title?: string;
+}
+
+/**
  * List of file change types.
  */
 export enum FileChangeType {
@@ -293,6 +319,16 @@ export interface ScriptCommandExecutorArguments {
      * Gets or sets the value for the next execution.
      */
     nextValue: any;
+    /**
+     * Opens a HTML document in a new tab.
+     * 
+     * @param {string} html The HTML document (source code).
+     * @param {string} [title] The custom title for the tab.
+     * @param {any} [id] The custom ID for the document in the storage.
+     * 
+     * @returns {Promise<any>} The promise.
+     */
+    readonly openHtml: (html: string, title?: string, id?: any) => Promise<any>;
     /**
      * Options for the execution (@see ScriptCommand).
      */

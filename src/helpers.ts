@@ -29,6 +29,16 @@ import * as Moment from 'moment';
 import * as sc_contracts from './contracts';
 import * as vscode from 'vscode';
 
+/**
+ * Describes a simple 'completed' action.
+ * 
+ * @param {any} [err] The occurred error.
+ * @param {TResult} [result] The result.
+ */
+export type SimpleCompletedAction<TResult> = (err?: any, result?: TResult) => void;
+
+
+let nextHtmlDocId = -1;
 
 /**
  * Returns a value as array.
@@ -82,6 +92,50 @@ export function compareValues<T>(x: T, y: T): number {
     }
 
     return 0;
+}
+
+/**
+ * Creates a simple 'completed' callback for a promise.
+ * 
+ * @param {Function} resolve The 'succeeded' callback.
+ * @param {Function} reject The 'error' callback.
+ * 
+ * @return {SimpleCompletedAction<TResult>} The created action.
+ */
+export function createSimplePromiseCompletedAction<TResult>(resolve: (value?: TResult | PromiseLike<TResult>) => void,
+                                                            reject?: (reason: any) => void): SimpleCompletedAction<TResult> {
+    return (err?, result?) => {
+        if (err) {
+            if (reject) {
+                reject(err);
+            }
+        }
+        else {
+            if (resolve) {
+                resolve(result);
+            }
+        }
+    };
+}
+
+/**
+ * Returns the value from a "parameter" object.
+ * 
+ * @param {Object} params The object.
+ * @param {string} name The name of the parameter.
+ * 
+ * @return {string} The value of the parameter (if found).
+ */
+export function getUrlParam(params: Object, name: string): string {
+    if (params) {
+        name = normalizeString(name);
+
+        for (let p in params) {
+            if (normalizeString(p) == name) {
+                return toStringSafe(params[p]);
+            }
+        }
+    }
 }
 
 /**
@@ -144,6 +198,106 @@ export function log(msg: any) {
 
     msg = toStringSafe(msg);
     console.log(`[vs-script-commands :: ${now.format('YYYY-MM-DD HH:mm:ss')}] => ${msg}`);
+}
+
+/**
+ * Normalizes a value as string so that is comparable.
+ * 
+ * @param {any} val The value to convert.
+ * @param {(str: string) => string} [normalizer] The custom normalizer.
+ * 
+ * @return {string} The normalized value.
+ */
+export function normalizeString(val: any, normalizer?: (str: string) => string): string {
+    if (!normalizer) {
+        normalizer = (str) => str.toLowerCase().trim();
+    }
+
+    return normalizer(toStringSafe(val));
+}
+
+/**
+ * Opens a HTML document in a new tab for a document storage.
+ * 
+ * @param {sc_contracts.Document[]} storage The storage to open for.
+ * @param {string} html The HTML document (source code).
+ * @param {string} [title] The custom title for the tab.
+ * @param {any} [id] The custom ID for the document in the storage.
+ * 
+ * @returns {Promise<any>} The promise.
+ */
+export function openHtmlDocument(storage: sc_contracts.Document[],
+                                 html: string, title?: string, id?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+        let completed = createSimplePromiseCompletedAction(resolve, reject);
+
+        try {
+            let body: Buffer;
+            let enc = 'utf8';
+            if (html) {
+                body = new Buffer(toStringSafe(html), enc);
+            }
+
+            if (isNullOrUndefined(id)) {
+                id = 'vsscGlobalHtmlDocs::22c1e089-269f-44e8-b112-c56549deaaaa::' + (++nextHtmlDocId);
+            }
+
+            let doc: sc_contracts.Document = {
+                body: body,
+                encoding: enc,
+                id: id,
+                mime: 'text/html',
+            };
+
+            if (!isEmptyString(title)) {
+                doc.title = toStringSafe(title).trim();
+            }
+
+            if (storage) {
+                storage.push(doc);
+            }
+
+            vscode.commands.executeCommand('extension.scriptCommands.openHtmlDoc', doc).then((result: any) => {
+                completed(null, result);
+            }, (err) => {
+                completed(err);
+            });
+        }
+        catch (e) {
+            completed(e);
+        }
+    });
+}
+
+/**
+ * Removes documents from a storage.
+ * 
+ * @param {sc_contracts.Document|sc_contracts.Document[]} docs The document(s) to remove.
+ * @param {sc_contracts.Document[]} storage The storage.
+ * 
+ * @return {sc_contracts.Document[]} The removed documents.
+ */
+export function removeDocuments(docs: sc_contracts.Document | sc_contracts.Document[],
+                                storage: sc_contracts.Document[]): sc_contracts.Document[] {
+    let ids = asArray(docs).filter(x => x)
+                           .map(x => x.id);
+
+    let removed = [];
+
+    if (storage) {
+        for (let i = 0; i < storage.length; ) {
+            let d = storage[i];
+            if (ids.indexOf(d.id) > -1) {
+                removed.push(d);
+                storage.splice(i, 1);
+            }
+            else {
+                ++i;
+            }
+        }
+    }
+
+    return removed;
 }
 
 /**
@@ -257,4 +411,33 @@ export function tryDispose(obj: vscode.Disposable): boolean {
 
         return false;
     }
+}
+
+/**
+ * Extracts the query parameters of an URI to an object.
+ * 
+ * @param {vscode.Uri} uri The URI.
+ * 
+ * @return {Object} The parameters of the URI as object.
+ */
+export function uriParamsToObject(uri: vscode.Uri): Object {
+    if (!uri) {
+        return uri;
+    }
+
+    let params: any;
+    if (!isEmptyString(uri.query)) {
+        // s. https://css-tricks.com/snippets/jquery/get-query-params-object/
+        params = uri.query.replace(/(^\?)/,'')
+                          .split("&")
+                          .map(function(n) { return n = n.split("="), this[normalizeString(n[0])] =
+                                                                           toStringSafe(decodeURIComponent(n[1])), this}
+                          .bind({}))[0];
+    }
+
+    if (!params) {
+        params = {};
+    }
+
+    return params;
 }

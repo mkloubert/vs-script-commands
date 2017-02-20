@@ -110,6 +110,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      */
     protected _fileSystemWatcher: vscode.FileSystemWatcher;
     /**
+     * Storage for global HTML documents.
+     */
+    protected _htmlDocs: sc_contracts.Document[];
+    /**
      * Stores the global output channel.
      */
     protected readonly _OUTPUT_CHANNEL: vscode.OutputChannel;
@@ -195,7 +199,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     protected executeScriptCommands(commandsToExecute: sc_contracts.ScriptCommand[],
                                     argsFactory?: sc_contracts.ScriptCommandArgumentFactory): Promise<any> {
         let me = this;
-        
+
         commandsToExecute = sc_helpers.asArray(commandsToExecute)
                                       .filter(x => x)
                                       .map(x => x);
@@ -344,6 +348,13 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         }
 
         return result;
+    }
+
+    /**
+     * Gets the storage of global HTML documents.
+     */
+    public get htmlDocuments(): sc_contracts.Document[] {
+        return this._htmlDocs;
     }
 
     /**
@@ -677,6 +688,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 globals: me.getGlobals(),
                                 globalState: undefined,
                                 nextValue: undefined,
+                                openHtml: (html, title, docId) => {
+                                    return sc_helpers.openHtmlDocument(me.htmlDocuments,
+                                                                       html, title, docId);
+                                },
                                 options: sc_helpers.cloneObject(c.options),
                                 previousValue: undefined,
                                 require: function(id) {
@@ -826,6 +841,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
             }
 
             me._config = newCfg;
+            me._htmlDocs = [];
 
             me.reloadCommands();
 

@@ -772,10 +772,38 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                         }
                                     });
                                 },
+                                startApi: () => {
+                                    return new Promise<any>((resolve, reject) => {
+                                        try {
+                                            vscode.commands.executeCommand('extension.restApi.startHost').then((result) => {
+                                                resolve(result);
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                },
                                 startCronJobs: (jobs) => {
                                     return new Promise<any>((resolve, reject) => {
                                         try {
                                             vscode.commands.executeCommand('extension.cronJons.startJobsByName', jobs).then((result) => {
+                                                resolve(result);
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                },
+                                stopApi: () => {
+                                    return new Promise<any>((resolve, reject) => {
+                                        try {
+                                            vscode.commands.executeCommand('extension.restApi.stopHost').then((result) => {
                                                 resolve(result);
                                             }, (err) => {
                                                 reject(err);

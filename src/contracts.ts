@@ -304,9 +304,14 @@ export type ScriptCommandArgumentFactory = (sc: ScriptCommand) => any[];
  * 
  * @param {ScriptCommandExecutorArguments} args Arguments for the execution.
  * 
- * @return {Promise<number> | void | number} The result (with the exit code).
+ * @return {Promise<number>|void|number} The result (with the exit code).
  */
-export type ScriptCommandExecutor = (args: ScriptCommandExecutorArguments) => Promise<number> | void | number;
+export type ScriptCommandExecutor = (args: ScriptCommandExecutorArguments) => ScriptCommandExecutorResult;
+
+/**
+ * Possible results of a script executor.
+ */
+export type ScriptCommandExecutorResult = Promise<number> | void | number;
 
 /**
  * Arguments for a script executor.
@@ -423,6 +428,15 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly restartCronJobs: (jobs: CronJobNames) => Promise<any>;
     /**
+     * Starts REST API host.
+     * 
+     * This requires 'extension.restApi.startHost' command as available in extensions like 'vs-rest-api'
+     * s. https://github.com/mkloubert/vs-rest-api
+     * 
+     * @return {Promise<any>} The promise.
+     */
+    readonly startApi: () => Promise<any>;
+    /**
      * Starts cron jobs.
      * 
      * This requires 'extension.cronJons.startJobsByName' command as available in extensions like 'vs-cron'
@@ -433,6 +447,15 @@ export interface ScriptCommandExecutorArguments {
      * @return {Promise<any>} The promise.
      */
     readonly startCronJobs: (jobs: CronJobNames) => Promise<any>;
+    /**
+     * Stops REST API host.
+     * 
+     * This requires 'extension.restApi.stopHost' command as available in extensions like 'vs-rest-api'
+     * s. https://github.com/mkloubert/vs-rest-api
+     * 
+     * @return {Promise<any>} The promise.
+     */
+    readonly stopApi: () => Promise<any>;
     /**
      * Stops cron jobs.
      * 

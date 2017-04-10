@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 1.12.0 (April 10th, 2017; REST API)
+
+* added `startApi()` and `stopApi()` methods to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface, which make use of commands provided by extensions like [vs-rest-api](https://github.com/mkloubert/vs-rest-api)
+
 ## 1.11.0 (April 10th, 2017; cron jobs)
 
 * added `getCronJobs()`, `restartCronJobs()`, `startCronJobs()` and `stopCronJobs()` methods to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface, which make use of commands provided by extensions like [vs-cron](https://github.com/mkloubert/vs-cron)

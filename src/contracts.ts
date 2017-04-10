@@ -50,6 +50,37 @@ export interface Configuration {
 }
 
 /**
+ * Information about a (cron) job.
+ */
+export interface CronJobInfo {
+    /**
+     * Gets the description of the underlying job.
+     */
+    readonly description: string;
+    /**
+     * Gets the details for the underlying job.
+     */
+    readonly detail: string;
+    /**
+     * Gets if the job is currently running or not.
+     */
+    readonly isRunning: boolean;
+    /**
+     * Gets the timestamp of the last execution in ISO format.
+     */
+    readonly lastExecution: string;
+    /**
+     * Gets the name of the job.
+     */
+    readonly name: string;
+}
+
+/**
+ * (Cron) Job name(s).
+ */
+export type CronJobNames = string | string[];
+
+/**
  * A document.
  */
 export interface Document {
@@ -320,6 +351,12 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly extension: vscode.ExtensionContext;
     /**
+     * Returns the list of current (cron) jobs.
+     * 
+     * @return {Promise<CronJobInfo[]>} The promise.
+     */
+    readonly getCronJobs: () => Promise<CronJobInfo[]>;
+    /**
      * The global variables from the settings.
      */
     globals: GlobalVariables;
@@ -355,6 +392,10 @@ export interface ScriptCommandExecutorArguments {
      */
     options?: any;
     /**
+     * Gets the list of (other) commands, defined by that extension.
+     */
+    readonly others: string[];
+    /**
      * Gets the output channel that can be used by the underlying script.
      */
     readonly outputChannel: vscode.OutputChannel;
@@ -370,6 +411,39 @@ export interface ScriptCommandExecutorArguments {
      * @return {any} The loaded module.
      */
     require: (id: string) => any;
+    /**
+     * Re-starts cron jobs.
+     * 
+     * This requires 'extension.cronJons.restartJobsByName' command as available in extensions like 'vs-cron'
+     * s. https://github.com/mkloubert/vs-cron
+     * 
+     * @param {CronJobNames} jobs The jobs to re-start.
+     * 
+     * @return {Promise<any>} The promise.
+     */
+    readonly restartCronJobs: (jobs: CronJobNames) => Promise<any>;
+    /**
+     * Starts cron jobs.
+     * 
+     * This requires 'extension.cronJons.startJobsByName' command as available in extensions like 'vs-cron'
+     * s. https://github.com/mkloubert/vs-cron
+     * 
+     * @param {CronJobNames} jobs The jobs to start.
+     * 
+     * @return {Promise<any>} The promise.
+     */
+    readonly startCronJobs: (jobs: CronJobNames) => Promise<any>;
+    /**
+     * Stops cron jobs.
+     * 
+     * This requires 'extension.cronJons.stopJobsByName' command as available in extensions like 'vs-cron'
+     * s. https://github.com/mkloubert/vs-cron
+     * 
+     * @param {CronJobNames} jobs The jobs to stop.
+     * 
+     * @return {Promise<any>} The promise.
+     */
+    readonly stopCronJobs: (jobs: CronJobNames) => Promise<any>;
 }
 
 /**

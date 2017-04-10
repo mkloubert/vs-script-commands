@@ -1,5 +1,10 @@
 # Change Log (vs-script-commands)
 
+## 1.11.0 (April 10th, 2017; cron jobs)
+
+* added `getCronJobs()`, `restartCronJobs()`, `startCronJobs()` and `stopCronJobs()` methods to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface, which make use of commands provided by extensions like [vs-cron](https://github.com/mkloubert/vs-cron)
+* added `others` property to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
+
 ## 1.10.0 (February 20th, 2017; deploy files)
 
 * added [deploy](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html#deploy) method to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) which make use of `extension.deploy.filesTo` command, provided by [vs-deploy](https://github.com/mkloubert/vs-deploy) extension

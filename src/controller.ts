@@ -44,6 +44,10 @@ export interface ScriptCommandEntry {
      */
     command: vscode.Disposable;
     /**
+     * The ID / name of the command.
+     */
+    id: string;
+    /**
      * The underlying script command object.
      */
     object: sc_contracts.ScriptCommand;
@@ -713,6 +717,29 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                 },
                                 events: undefined,
                                 extension: undefined,
+                                getCronJobs: () => {
+                                    return new Promise<sc_contracts.CronJobInfo[]>((resolve, reject) => {
+                                        try {
+                                            let callback = (err: any, jobs: sc_contracts.CronJobInfo[]) => {
+                                                if (err) {
+                                                    reject(err);
+                                                }
+                                                else {
+                                                    resolve(jobs);
+                                                }
+                                            };
+
+                                            vscode.commands.executeCommand('extension.cronJons.getJobs', callback).then(() => {
+                                                //TODO
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                },
                                 globals: me.getGlobals(),
                                 globalState: undefined,
                                 log: function(msg) {
@@ -725,11 +752,54 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                                        html, title, docId);
                                 },
                                 options: sc_helpers.cloneObject(c.options),
+                                others: undefined,
                                 outputChannel: undefined,
                                 previousValue: undefined,
                                 require: function(id) {
                                     return require(id);
                                 },
+                                restartCronJobs: (jobs) => {
+                                    return new Promise<any>((resolve, reject) => {
+                                        try {
+                                            vscode.commands.executeCommand('extension.cronJons.restartJobsByName', jobs).then((result) => {
+                                                resolve(result);
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                },
+                                startCronJobs: (jobs) => {
+                                    return new Promise<any>((resolve, reject) => {
+                                        try {
+                                            vscode.commands.executeCommand('extension.cronJons.startJobsByName', jobs).then((result) => {
+                                                resolve(result);
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                },
+                                stopCronJobs: (jobs) => {
+                                    return new Promise<any>((resolve, reject) => {
+                                        try {
+                                            vscode.commands.executeCommand('extension.cronJons.stopJobsByName', jobs).then((result) => {
+                                                resolve(result);
+                                            }, (err) => {
+                                                reject(err);
+                                            });
+                                        }
+                                        catch (e) {
+                                            reject(e);
+                                        }
+                                    });
+                                }
                             };
 
                             // args.button
@@ -755,6 +825,13 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                             Object.defineProperty(args, 'globalState', {
                                 enumerable: true,
                                 get: () => { return globalState; }, 
+                            });
+
+                            // args.others
+                            Object.defineProperty(args, 'others', {
+                                enumerable: true,
+                                get: () => { return me._COMMANDS.map(c => c.id)
+                                                                .filter(c => c !== cmdId); }, 
                             });
 
                             // args.outputChannel
@@ -834,8 +911,8 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                         }
 
                         // color
-                        let color = sc_helpers.toStringSafe(c.button.color).toLowerCase().trim();
-                        if (color) {
+                        let color = sc_helpers.normalizeString(c.button.color);
+                        if ('' !== color) {
                             btn.color = color;
                         }
 
@@ -851,6 +928,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                     me._COMMANDS.push({
                         button: btn,
                         command: cmd,
+                        id: cmdId,
                         object: c,
                     });
                 }

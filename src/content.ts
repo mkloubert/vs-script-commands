@@ -31,49 +31,6 @@ import * as vscode from 'vscode';
 
 
 /**
- * HTML executor.
- * 
- * @param {HtmlViewerExecutorArguments} args The arguments.
- * 
- * @return {HtmlViewerExecutorResult} The result.
- */
-export type HtmlViewerExecutor = (args: HtmlViewerExecutorArguments) => HtmlViewerExecutorResult;
-
-/**
- * Arguments for a HTML executor.
- */
-export interface HtmlViewerExecutorArguments {
-    /**
-     * The cancellation token.
-     */
-    readonly cancelToken: vscode.CancellationToken;
-    /**
-     * The URI.
-     */
-    readonly uri: vscode.Uri;
-    /**
-     * 
-     */
-    readonly workspaceState: Object;
-}
-
-/**
- * The result of a HTML executor.
- */
-export type HtmlViewerExecutorResult = string | Thenable<string>;
-
-/**
- * A module that executes logic for a HTML content provider.
- */
-export interface HtmlViewerModule {
-    /**
-     * The HTML executor.
-     */
-    readonly execute: HtmlViewerExecutor;
-}
-
-
-/**
  * HTML content provider.
  */
 export class HtmlTextDocumentContentProvider implements vscode.TextDocumentContentProvider {

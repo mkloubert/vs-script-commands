@@ -311,7 +311,7 @@ export type ScriptCommandExecutor = (args: ScriptCommandExecutorArguments) => Sc
 /**
  * Possible results of a script executor.
  */
-export type ScriptCommandExecutorResult = Promise<number> | void | number;
+export type ScriptCommandExecutorResult = any;
 
 /**
  * Arguments for a script executor.

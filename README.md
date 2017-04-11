@@ -12,6 +12,7 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
 
 1. [Install](#install-)
 2. [How to use](#how-to-use-)
+   * [Changes](#changes-)
    * [Settings](#settings-)
       * [Commands](#commands-)
    * [Key bindinds](#key-bindinds-)
@@ -32,6 +33,10 @@ Or search for things like `vs-script-commands` in your editor:
 ![Screenshot VSCode Extension search](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/screenshot1.png)
 
 ## How to use [[&uarr;](#table-of-contents)]
+
+### Changes [[&uarr;](#how-to-use-)]
+
+* if you come from version 1.x, you should take a look at the [wiki](https://github.com/mkloubert/vs-script-commands/wiki#since-version-2x-) first ... if you have problems, you can open an [issue](https://github.com/mkloubert/vs-script-commands/issues) and/or download a version 1.x branch from [here](https://github.com/mkloubert/vs-script-commands/releases)
 
 ### Settings [[&uarr;](#how-to-use-)]
 
@@ -55,7 +60,7 @@ Add a `script.commands` section:
 
 #### Commands [[&uarr;](#settings-)]
 
-Define one or more command, by defining its `id` and the script file (relative to your workspace) which should be executed:
+Define one or more command, by defining its `id` and the script file, which should be executed:
 
 ```json
 {
@@ -133,7 +138,7 @@ exports.execute = function (args) {
     var scriptFile = path.basename(__filename);
 
     // open HTML document in new tab (for reports e.g.)
-    args.openHtml('Hello from my extension: ' + scriptFile, 'My HTML document').then(function() {
+    args.openHtml('<html>Hello from my extension: ' + scriptFile + '</html>', 'My HTML document').then(function() {
         // HTML opened
     }, function(err) {
         // opening HTML document failed
@@ -148,12 +153,27 @@ exports.execute = function (args) {
     });
 
     vscode.window.showInformationMessage('Hello from my extension: ' + scriptFile);
+
+    // you also can return a Promise
+    // if your command is executed async
+    return 666;
 }
 ```
 
 The `args` parameter uses the [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface.
 
-You can return a number (sync execution), a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise) or nothing (default exit code `0`).
+You can now execute the command by anything that uses the [Visual Studio Code API](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_commands):
+
+```javascript
+var vscode = require('vscode');
+
+vscode.commands.executeCommand('mkloubert.mycommand').then(function(result) {
+    // if we look at the upper example:
+    // this should be: 666
+}, function(err) {
+    // handle an error
+});
+```
 
 A command entry provides the following properties:
 
@@ -179,7 +199,7 @@ A command entry provides the following properties:
 | `onSaved` | Is invoked when a file has been saved. Default `(false)` |
 | `onStartup` | Executes the command on startup or not. Default `(false)` |
 | `options` | Additional data for the execution. |
-| `script` | The path to the script to exeute. |
+| `script` | The path to the script to execute. IF YOU USE A RELATIVE PATH: The path is relative to your workspace. |
 | `sortOrder` | The sort order (for the GUI). Default `0` |
 | `suppressArguments` | Supress own arguments of the extension or not. Default `(false)` |
 

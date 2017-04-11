@@ -637,6 +637,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
 
                 let btn: vscode.StatusBarItem;
                 let cmd: vscode.Disposable;
+                let disposeItems = false;
 
                 let prevVal: any;
 
@@ -649,265 +650,250 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                     }
 
                     cmd = vscode.commands.registerCommand(cmdId, function() {
-                        let args: sc_contracts.ScriptCommandExecutorArguments;
-                        let completed = (err?: any, exitCode?: number, nv?: any) => {
-                            try {
-                                if (err) {
-                                    vscode.window.showErrorMessage(`[vs-script-commands] Execution of ${cmdId} failed: ${sc_helpers.toStringSafe(err)}`);
-                                }
-                                else {
-                                    if (sc_helpers.isNullOrUndefined(exitCode)) {
-                                        exitCode = 0;
+                        let funcArgs = arguments;
+
+                        return new Promise<any>((res, rej) => {
+                            let args: sc_contracts.ScriptCommandExecutorArguments;
+                            let completed = (err: any, result?: any) => {
+                                try {
+                                    if (err) {
+                                        rej(err);
+                                    }
+                                    else {
+                                        res(result);
                                     }
                                 }
-
-                                if (!sc_helpers.isNullOrUndefined(exitCode)) {
-                                    console.log(`[vs-script-commands] '${cmdId}' returned with exit code ${exitCode}`);
+                                finally {
+                                    if (args) {
+                                        commandState = args.commandState;
+                                        globalState = args.globalState;
+                                        prevVal = args.nextValue;
+                                    }
                                 }
-                            }
-                            finally {
-                                if (args) {
-                                    commandState = args.commandState;
-                                    globalState = args.globalState;
-                                }
+                            };
 
-                                prevVal = nv;
-                            }
-                        };
+                            try {
+                                let cmdModule = sc_helpers.loadModule<sc_contracts.ScriptCommandModule>(c.script, doCacheScript);
+                                if (cmdModule.execute) {
+                                    args = {
+                                        arguments: funcArgs,
+                                        button: undefined,
+                                        command: cmdId,
+                                        commandState: commandState,
+                                        deploy: (files, targets) => {
+                                            // files
+                                            files = sc_helpers.asArray(files)
+                                                              .map(x => sc_helpers.toStringSafe(x))
+                                                              .filter(x => !sc_helpers.isEmptyString(x));
+                                            files = sc_helpers.distinctArray(files);
 
-                        try {
-                            let cmdModule = sc_helpers.loadModule<sc_contracts.ScriptCommandModule>(c.script, doCacheScript);
-                            if (!cmdModule.execute) {
-                                completed();
-                                return;  // no execute() function found
-                            }
+                                            // targets
+                                            targets = sc_helpers.asArray(targets)
+                                                                .map(x => sc_helpers.normalizeString(x))
+                                                                .filter(x => x);
+                                            targets = sc_helpers.distinctArray(targets);
 
-                            args = {
-                                arguments: arguments,
-                                button: undefined,
-                                command: cmdId,
-                                commandState: commandState,
-                                deploy: (files, targets) => {
-                                    // files
-                                    files = sc_helpers.asArray(files)
-                                                      .map(x => sc_helpers.toStringSafe(x))
-                                                      .filter(x => !sc_helpers.isEmptyString(x));
-                                    files = sc_helpers.distinctArray(files);
+                                            return new Promise<any>((resolve, reject) => {
+                                                let completed = sc_helpers.createSimplePromiseCompletedAction(resolve, reject);
 
-                                    // targets
-                                    targets = sc_helpers.asArray(targets)
-                                                        .map(x => sc_helpers.normalizeString(x))
-                                                        .filter(x => x);
-                                    targets = sc_helpers.distinctArray(targets);
+                                                try {
+                                                    vscode.commands.executeCommand('extension.deploy.filesTo', files, targets).then((result) => {
+                                                        completed(null, result);
+                                                    }, (err) => {
+                                                        completed(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    completed(e);
+                                                }
+                                            });
+                                        },
+                                        events: undefined,
+                                        extension: undefined,
+                                        getCronJobs: () => {
+                                            return new Promise<sc_contracts.CronJobInfo[]>((resolve, reject) => {
+                                                try {
+                                                    let callback = (err: any, jobs: sc_contracts.CronJobInfo[]) => {
+                                                        if (err) {
+                                                            reject(err);
+                                                        }
+                                                        else {
+                                                            resolve(jobs);
+                                                        }
+                                                    };
 
-                                    return new Promise<any>((resolve, reject) => {
-                                        let completed = sc_helpers.createSimplePromiseCompletedAction(resolve, reject);
+                                                    vscode.commands.executeCommand('extension.cronJons.getJobs', callback).then(() => {
+                                                        //TODO
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
+                                        globals: me.getGlobals(),
+                                        globalState: undefined,
+                                        log: function(msg) {
+                                            me.log(msg);
+                                            return this;
+                                        },
+                                        nextValue: undefined,
+                                        openHtml: (html, title, docId) => {
+                                            return sc_helpers.openHtmlDocument(me.htmlDocuments,
+                                                                            html, title, docId);
+                                        },
+                                        options: sc_helpers.cloneObject(c.options),
+                                        others: undefined,
+                                        outputChannel: undefined,
+                                        previousValue: undefined,
+                                        require: function(id) {
+                                            return require(id);
+                                        },
+                                        restartCronJobs: (jobs) => {
+                                            return new Promise<any>((resolve, reject) => {
+                                                try {
+                                                    vscode.commands.executeCommand('extension.cronJons.restartJobsByName', jobs).then((result) => {
+                                                        resolve(result);
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
+                                        startApi: () => {
+                                            return new Promise<any>((resolve, reject) => {
+                                                try {
+                                                    vscode.commands.executeCommand('extension.restApi.startHost').then((result) => {
+                                                        resolve(result);
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
+                                        startCronJobs: (jobs) => {
+                                            return new Promise<any>((resolve, reject) => {
+                                                try {
+                                                    vscode.commands.executeCommand('extension.cronJons.startJobsByName', jobs).then((result) => {
+                                                        resolve(result);
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
+                                        stopApi: () => {
+                                            return new Promise<any>((resolve, reject) => {
+                                                try {
+                                                    vscode.commands.executeCommand('extension.restApi.stopHost').then((result) => {
+                                                        resolve(result);
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
+                                        stopCronJobs: (jobs) => {
+                                            return new Promise<any>((resolve, reject) => {
+                                                try {
+                                                    vscode.commands.executeCommand('extension.cronJons.stopJobsByName', jobs).then((result) => {
+                                                        resolve(result);
+                                                    }, (err) => {
+                                                        reject(err);
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        }
+                                    };
 
-                                        try {
-                                            vscode.commands.executeCommand('extension.deploy.filesTo', files, targets).then((result) => {
-                                                completed(null, result);
+                                    // args.button
+                                    Object.defineProperty(args, 'button', {
+                                        configurable: true,
+                                        enumerable: true,
+                                        get: () => { return btn; }, 
+                                    });
+
+                                    // args.events
+                                    Object.defineProperty(args, 'events', {
+                                        enumerable: true,
+                                        get: () => { return newEventEmitter; }, 
+                                    });
+
+                                    // args.extension
+                                    Object.defineProperty(args, 'extension', {
+                                        enumerable: true,
+                                        get: () => { return me._CONTEXT; }, 
+                                    });
+
+                                    // args.globalState
+                                    Object.defineProperty(args, 'globalState', {
+                                        enumerable: true,
+                                        get: () => { return globalState; }, 
+                                    });
+
+                                    // args.others
+                                    Object.defineProperty(args, 'others', {
+                                        enumerable: true,
+                                        get: () => { return me._COMMANDS.map(c => c.id)
+                                                                        .filter(c => c !== cmdId); }, 
+                                    });
+
+                                    // args.outputChannel
+                                    Object.defineProperty(args, 'outputChannel', {
+                                        enumerable: true,
+                                        get: () => { return me.outputChannel; }, 
+                                    });
+
+                                    // args.previousValue
+                                    Object.defineProperty(args, 'previousValue', {
+                                        enumerable: true,
+                                        get: () => { return prevVal; }, 
+                                    });
+
+                                    let result = cmdModule.execute(args);
+                                    if ('object' === typeof result) {
+                                        if ('function' === typeof result['then']) {
+                                            // seems to be a promise
+
+                                            result.then((r) => {
+                                                completed(null, r);
                                             }, (err) => {
                                                 completed(err);
                                             });
                                         }
-                                        catch (e) {
-                                            completed(e);
+                                        else {
+                                            completed(null, result);  // DOES NOT seem to be a promise
                                         }
-                                    });
-                                },
-                                events: undefined,
-                                extension: undefined,
-                                getCronJobs: () => {
-                                    return new Promise<sc_contracts.CronJobInfo[]>((resolve, reject) => {
-                                        try {
-                                            let callback = (err: any, jobs: sc_contracts.CronJobInfo[]) => {
-                                                if (err) {
-                                                    reject(err);
-                                                }
-                                                else {
-                                                    resolve(jobs);
-                                                }
-                                            };
-
-                                            vscode.commands.executeCommand('extension.cronJons.getJobs', callback).then(() => {
-                                                //TODO
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                },
-                                globals: me.getGlobals(),
-                                globalState: undefined,
-                                log: function(msg) {
-                                    me.log(msg);
-                                    return this;
-                                },
-                                nextValue: undefined,
-                                openHtml: (html, title, docId) => {
-                                    return sc_helpers.openHtmlDocument(me.htmlDocuments,
-                                                                       html, title, docId);
-                                },
-                                options: sc_helpers.cloneObject(c.options),
-                                others: undefined,
-                                outputChannel: undefined,
-                                previousValue: undefined,
-                                require: function(id) {
-                                    return require(id);
-                                },
-                                restartCronJobs: (jobs) => {
-                                    return new Promise<any>((resolve, reject) => {
-                                        try {
-                                            vscode.commands.executeCommand('extension.cronJons.restartJobsByName', jobs).then((result) => {
-                                                resolve(result);
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                },
-                                startApi: () => {
-                                    return new Promise<any>((resolve, reject) => {
-                                        try {
-                                            vscode.commands.executeCommand('extension.restApi.startHost').then((result) => {
-                                                resolve(result);
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                },
-                                startCronJobs: (jobs) => {
-                                    return new Promise<any>((resolve, reject) => {
-                                        try {
-                                            vscode.commands.executeCommand('extension.cronJons.startJobsByName', jobs).then((result) => {
-                                                resolve(result);
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                },
-                                stopApi: () => {
-                                    return new Promise<any>((resolve, reject) => {
-                                        try {
-                                            vscode.commands.executeCommand('extension.restApi.stopHost').then((result) => {
-                                                resolve(result);
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                },
-                                stopCronJobs: (jobs) => {
-                                    return new Promise<any>((resolve, reject) => {
-                                        try {
-                                            vscode.commands.executeCommand('extension.cronJons.stopJobsByName', jobs).then((result) => {
-                                                resolve(result);
-                                            }, (err) => {
-                                                reject(err);
-                                            });
-                                        }
-                                        catch (e) {
-                                            reject(e);
-                                        }
-                                    });
-                                }
-                            };
-
-                            // args.button
-                            Object.defineProperty(args, 'button', {
-                                configurable: true,
-                                enumerable: true,
-                                get: () => { return btn; }, 
-                            });
-
-                            // args.events
-                            Object.defineProperty(args, 'events', {
-                                enumerable: true,
-                                get: () => { return newEventEmitter; }, 
-                            });
-
-                            // args.extension
-                            Object.defineProperty(args, 'extension', {
-                                enumerable: true,
-                                get: () => { return me._CONTEXT; }, 
-                            });
-
-                            // args.globalState
-                            Object.defineProperty(args, 'globalState', {
-                                enumerable: true,
-                                get: () => { return globalState; }, 
-                            });
-
-                            // args.others
-                            Object.defineProperty(args, 'others', {
-                                enumerable: true,
-                                get: () => { return me._COMMANDS.map(c => c.id)
-                                                                .filter(c => c !== cmdId); }, 
-                            });
-
-                            // args.outputChannel
-                            Object.defineProperty(args, 'outputChannel', {
-                                enumerable: true,
-                                get: () => { return me.outputChannel; }, 
-                            });
-
-                            // args.previousValue
-                            Object.defineProperty(args, 'previousValue', {
-                                enumerable: true,
-                                get: () => { return prevVal; }, 
-                            });
-
-                            try {
-                                let result = cmdModule.execute(args);
-                                if (!sc_helpers.isNullOrUndefined(result)) {
-                                    if ('number' === typeof result) {
-                                        completed(null, result, args.nextValue);
                                     }
                                     else {
-                                        let t = <Thenable<number>>result;
-
-                                        t.then((exitCode) => {
-                                            if (sc_helpers.isEmptyString(exitCode)) {
-                                                exitCode = 0;
-                                            }
-                                            else {
-                                                exitCode = parseInt(sc_helpers.toStringSafe(exitCode).trim());
-                                            }
-
-                                            completed(null, exitCode, args.nextValue);
-                                        }, (err) => {
-                                            completed(err, null, args.nextValue);
-                                        });
+                                        completed(null, result);  // no object
                                     }
                                 }
                                 else {
-                                    completed(null, null, args.nextValue);
+                                    completed(null);  // no execute() function found
                                 }
                             }
                             catch (e) {
-                                completed(e, null, args.nextValue);
+                                completed(e);
                             }
-                        }
-                        catch (e) {
-                            completed(e);
-                        }
+                        });
                     });
 
                     if (c.button) {
@@ -961,10 +947,15 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                     });
                 }
                 catch (e) {
-                    sc_helpers.tryDispose(btn);
-                    sc_helpers.tryDispose(cmd);
+                    disposeItems = true;
 
                     me.log(`[ERROR] ScriptCommandController.reloadCommands(2)(${cmdId}): ${sc_helpers.toStringSafe(e)}`);
+                }
+                finally {
+                    if (disposeItems) {
+                        sc_helpers.tryDispose(btn);
+                        sc_helpers.tryDispose(cmd);
+                    }
                 }
             });
         }

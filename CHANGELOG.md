@@ -1,6 +1,6 @@
 # Change Log (vs-script-commands)
 
-## 2.0.0 (April 11th, 2017; improved execution of scripts)
+## 2.0.1 (April 11th, 2017; improved execution of scripts)
 
 * the behavior of executing scripts has been improved ... if you come from version 1.x, have a look at the [wiki](https://github.com/mkloubert/vs-script-commands/wiki#since-version-2x-) first
 * if you have problems, you can open an [issue](https://github.com/mkloubert/vs-script-commands/issues) and/or download a version 1.x branch from [here](https://github.com/mkloubert/vs-script-commands/releases)

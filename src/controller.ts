@@ -868,23 +868,11 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                     });
 
                                     let result = cmdModule.execute(args);
-                                    if ('object' === typeof result) {
-                                        if ('function' === typeof result['then']) {
-                                            // seems to be a promise
-
-                                            result.then((r) => {
-                                                completed(null, r);
-                                            }, (err) => {
-                                                completed(err);
-                                            });
-                                        }
-                                        else {
-                                            completed(null, result);  // DOES NOT seem to be a promise
-                                        }
-                                    }
-                                    else {
-                                        completed(null, result);  // no object
-                                    }
+                                    Promise.resolve(result).then((r) => {
+                                        completed(null, r);
+                                    }).catch((err) => {
+                                        completed(err);
+                                    });
                                 }
                                 else {
                                     completed(null);  // no execute() function found

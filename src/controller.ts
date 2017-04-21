@@ -550,6 +550,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 case sc_contracts.FileChangeType.EditorChanged:
                     doesMatch = sc_helpers.toBooleanSafe(c.onEditorChanged);
                     break;
+
+                case sc_contracts.FileChangeType.WillSave:
+                    doesMatch = sc_helpers.toBooleanSafe(c.onWillSave);
+                    break;
             }
             
             return doesMatch;
@@ -582,6 +586,16 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         }).catch((err) => {
             vscode.window.showErrorMessage(`[vs-script-commands] Execution of script commands (${sc_contracts.FileChangeType[type]}) failed: ${sc_helpers.toStringSafe(err)}`);
         });;           
+    }
+
+    /**
+     * Is invoked when a document is being to be saved.
+     * 
+     * @param {vscode.TextDocumentWillSaveEvent} e The event data.
+     */
+    public onWillSaveTextDocument(e: vscode.TextDocumentWillSaveEvent) {
+        this.onFileChange(e.document.uri, sc_contracts.FileChangeType.WillSave,
+                          () => [ e ]);
     }
 
     /**

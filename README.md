@@ -199,6 +199,7 @@ A command entry provides the following properties:
 | `onNewFile` | Is invoked when a file has been created. Default `(false)` |
 | `onSaved` | Is invoked when a file has been saved. Default `(false)` |
 | `onStartup` | Executes the command on startup or not. Default `(false)` |
+| `onWillSave` | Is invoked when a file is going to be saved. Default `(false)` |
 | `options` | Additional data for the execution. |
 | `script` | The path to the script to execute. IF YOU USE A RELATIVE PATH: The path is relative to your workspace. |
 | `sortOrder` | The sort order (for the GUI). Default `0` |
@@ -206,7 +207,7 @@ A command entry provides the following properties:
 
 ### Key bindinds [[&uarr;](#how-to-use-)]
 
-After defining one or more commands, you can open your [keybindings.json](https://code.visualstudio.com/docs/customization/keybindings#_customizing-shortcuts) file and set shortcuts for them, by selecting `File > Preferences > Keyboard Shortcuts` (`Code > Preferences > Keyboard Shortcuts` on Mac) in your editor:
+After defining one or more commands, you can open your [keybindings.json](https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization) file and set shortcuts for them, by selecting `File > Preferences > Keyboard Shortcuts` (`Code > Preferences > Keyboard Shortcuts` on Mac) in your editor:
 
 ![Demo Key bindinds](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo1.gif)
 

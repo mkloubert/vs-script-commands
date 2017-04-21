@@ -121,6 +121,11 @@ export function activate(context: vscode.ExtensionContext) {
     // notifiy on document has been saved
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(controller.onDidSaveTextDocument,
                                                                       controller));
+
+    // notifiy on document is going to be saved
+    context.subscriptions.push(vscode.workspace.onWillSaveTextDocument(controller.onWillSaveTextDocument,
+                                                                       controller));
+                                                                      
     // notfiy open text editor
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(controller.onDidOpenTextDocument,
                                                                       controller));

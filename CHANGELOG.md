@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+# 3.0.0 (April 21st, 2017; execute command before save document)
+
+* added `onWillSave` setting for commands, which indicates to invoke commands if a file is going to be saved
+
 ## 2.0.1 (April 11th, 2017; improved execution of scripts)
 
 * the behavior of executing scripts has been improved ... if you come from version 1.x, have a look at the [wiki](https://github.com/mkloubert/vs-script-commands/wiki#since-version-2x-) first

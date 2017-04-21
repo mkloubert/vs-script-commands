@@ -138,6 +138,10 @@ export enum FileChangeType {
      * File has been changed in text editor.
      */
     EditorChanged = 6,
+    /**
+     * File is going to be saved.
+     */
+    WillSave = 7,
 }
 
 /**
@@ -272,6 +276,10 @@ export interface ScriptCommand {
      * Executes the command on startup or not.
      */
     onStartup?: boolean;
+    /**
+     * Is invoked when a file is being to be saved.
+     */
+    onWillSave?: boolean;
     /**
      * Additional data for the execution.
      */

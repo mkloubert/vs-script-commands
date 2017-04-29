@@ -263,6 +263,33 @@ Press `F1` to open the list of commands and select `Script commands: Quick execu
 
 ![Demo Quick execution](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo4.gif)
 
+You can define custom settings for the feature:
+
+```json
+{
+    "script.commands": {
+        "quick": [
+            {
+                "noResultInfo": false,
+                "showResultInTab": true,
+                
+                "state": {
+                    "MK": 23979,
+                    "TM": "1979-09-05 23:09:19.079"
+                }
+            }
+        ]
+    }
+}
+```
+
+| Name | Description |
+| ---- | --------- |
+| `cwd` | The initial current directory for the executions. |
+| `noResultInfo` | Do not show results of executions. Default: `(false)` |
+| `showResultInTab` | Show results in tab instead of a popup or not. Default: `(false)` |
+| `state` | The initial state value. |
+
 ## Documentation [[&uarr;](#table-of-contents)]
 
 The full API documentation can be found [here](https://mkloubert.github.io/vs-script-commands/).

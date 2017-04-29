@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+# 4.1.0 (April 29th, 2017; quick JavaScript execution)
+
+* added `$mkdir` function for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
+
 # 4.0.0 (April 29th, 2017; quick JavaScript execution)
 
 * added `Script commands: Quick execution` command that can [execute JavaScript code quickly](https://github.com/mkloubert/vs-script-commands#quick-execution-) ... enter `$help` as first action to get information about available functions and variables

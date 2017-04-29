@@ -211,6 +211,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
+    markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean = true, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
@@ -471,6 +472,14 @@ export function quickExecution() {
                 }
 
                 return FS.lstatSync(path);
+            };
+            const $mkdir = function(dir: string) {
+                dir = sc_helpers.toStringSafe(dir);
+                if (!Path.isAbsolute(dir)) {
+                    dir = Path.join(_currentDir, dir);
+                }
+
+                FSExtra.mkdirsSync(dir);
             };
             let $maxDepth = 64;
             const $noResultInfo = function(flag = true, permanent = false): boolean {

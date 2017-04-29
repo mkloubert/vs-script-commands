@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+# 4.0.0 (April 29th, 2017; quick JavaScript execution)
+
+* added `Script commands: Quick execution` command that can [execute JavaScript code quickly](https://github.com/mkloubert/vs-script-commands#quick-execution-) ... enter `$help` as first action to get information about available functions and variables
+
 # 3.0.0 (April 21st, 2017; execute command before save document)
 
 * added `onWillSave` setting for commands, which indicates to invoke commands if a file is going to be saved

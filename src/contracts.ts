@@ -40,6 +40,27 @@ export interface Configuration {
      */
     globals?: GlobalVariables;
     /**
+     * Settings for "quick execution".
+     */
+    quick?: {
+        /**
+         * The initial current directory for the executions.
+         */
+        cwd?: string;
+        /**
+         * Show result of execution or not.
+         */
+        noResultInfo?: boolean;
+        /**
+         * Show results in tab instead of a popup or not.
+         */
+        showResultInTab?: boolean;
+        /**
+         * The initial state value.
+         */
+        state?: any;
+    };
+    /**
      * Open output on startup or not.
      */
     showOutput?: boolean;

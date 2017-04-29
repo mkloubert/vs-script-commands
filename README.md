@@ -18,6 +18,7 @@ Adds additional commands to [Visual Studio Code](https://code.visualstudio.com/)
    * [Key bindinds](#key-bindinds-)
    * [Invoke manually](#invoke-manually-)
    * [Status bar buttons](#status-bar-buttons-)
+   * [Quick execution](#quick-execution-)
 3. [Documentation](#documentation-)
 
 ## Install [[&uarr;](#table-of-contents)]
@@ -221,6 +222,7 @@ Press `F1` to open the list of commands and enter one of the following commands:
 | ---- | ---- | --------- |
 | `Script commands: Execute command` | Executes a command defined by that extension. | `extension.scriptCommands.execute` |
 | `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. | `extension.scriptCommands.executeVSCode` |
+| `Script commands: Quick execution` | Executes a JavaScript expression quickly. | `extension.scriptCommands.quickExecution` |
 
 ### Status bar buttons [[&uarr;](#how-to-use-)]
 
@@ -254,6 +256,12 @@ You can activate buttons for your commands in the status bar, by defining the `b
 | `show` | Show button on startup or not. Default `(true)` |
 | `text` | The caption for the button. |
 | `tooltip` | The tooltip for the button. |
+
+### Quick execution [[&uarr;](#how-to-use-)]
+
+Press `F1` to open the list of commands and select `Script commands: Quick execution` to execute any JavaScript expression (execute `$help` to open a help tab which lists all available features, like functions and variables):
+
+![Demo Quick execution](https://raw.githubusercontent.com/mkloubert/vs-script-commands/master/img/demo4.gif)
 
 ## Documentation [[&uarr;](#table-of-contents)]
 

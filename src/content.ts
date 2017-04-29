@@ -78,7 +78,7 @@ export class HtmlTextDocumentContentProvider implements vscode.TextDocumentConte
                     for (let i = 0; i < htmlDocs.length; i++) {
                         let d = htmlDocs[i];
 
-                        if (sc_helpers.toStringSafe(d.id).trim() == id) {
+                        if (sc_helpers.toStringSafe(d.id).trim() === id) {
                             doc = d;
                             break;
                         }
@@ -90,7 +90,7 @@ export class HtmlTextDocumentContentProvider implements vscode.TextDocumentConte
                 if (doc) {
                     if (doc.body) {
                         let enc = sc_helpers.normalizeString(doc.encoding);
-                        if (!enc) {
+                        if ('' === enc) {
                             enc = 'utf8';
                         }
 

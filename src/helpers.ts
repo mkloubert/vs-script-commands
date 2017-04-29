@@ -148,7 +148,7 @@ export function getUrlParam(params: Object, name: string): string {
         name = normalizeString(name);
 
         for (let p in params) {
-            if (normalizeString(p) == name) {
+            if (normalizeString(p) === name) {
                 return toStringSafe(params[p]);
             }
         }
@@ -164,7 +164,7 @@ export function getUrlParam(params: Object, name: string): string {
  * @return {boolean} Is empty or not.
  */
 export function isEmptyString(val: any): boolean {
-    return '' == toStringSafe(val).trim();
+    return '' === toStringSafe(val).trim();
 }
 
 /**
@@ -318,6 +318,24 @@ export function removeDocuments(docs: sc_contracts.Document | sc_contracts.Docum
 }
 
 /**
+ * Replaces all occurrences of a string.
+ * 
+ * @param {any} str The input string.
+ * @param {any} searchValue The value to search for.
+ * @param {any} replaceValue The value to replace 'searchValue' with.
+ * 
+ * @return {string} The output string.
+ */
+export function replaceAllStrings(str: any, searchValue: any, replaceValue: any) {
+    str = toStringSafe(str);
+    searchValue = toStringSafe(searchValue);
+    replaceValue = toStringSafe(replaceValue);
+
+    return str.split(searchValue)
+              .join(replaceValue);
+}
+
+/**
  * Sorts a list of commands.
  * 
  * @param {deploy_contracts.ScriptCommand[]} pkgs The input list.
@@ -370,6 +388,31 @@ export function sortCommands(pkgs: sc_contracts.ScriptCommand[],
                    return compareValues(x.index, y.index);
                })
                .map(x => x.value);
+}
+
+/**
+ * Returns an array like object as new array.
+ * 
+ * @param {ArrayLike<T>} arr The input object. 
+ * @param {boolean} [normalize] Returns an empty array, if input object is (null) / undefined.
+ * 
+ * @return {T[]} The input object as array. 
+ */
+export function toArray<T>(arr: ArrayLike<T>, normalize = true): T[] {
+    if (isNullOrUndefined(arr)) {
+        if (toBooleanSafe(normalize)) {
+            return [];
+        }
+        
+        return <any>arr;
+    }
+
+    let newArray: T[] = [];
+    for (let i = 0; i < arr.length; i++) {
+        newArray.push(arr[i]);
+    }
+
+    return newArray;
 }
 
 /**

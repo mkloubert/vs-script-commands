@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.6.0"
@@ -32,6 +32,11 @@
       {
         "command": "extension.scriptCommands.executeVSCode",
         "title": "Execute VSCode command",
+        "category": "Script commands"
+      },
+      {
+        "command": "extension.scriptCommands.quickExecution",
+        "title": "Quick execution",
         "category": "Script commands"
       }
     ],
@@ -142,10 +147,10 @@
                       "default": false
                     },
                     "onFileClosed": {
-                        "type": "boolean",
-                        "description": "Is invoked when a file has been closed.",
-                        "default": false
-                      },
+                      "type": "boolean",
+                      "description": "Is invoked when a file has been closed.",
+                      "default": false
+                    },
                     "onFileDeleted": {
                       "type": "boolean",
                       "description": "Is invoked when a file has been deleted.",
@@ -195,8 +200,9 @@
                       "default": false
                     }
                   },
-                  "required":[
-                    "id", "script"
+                  "required": [
+                    "id",
+                    "script"
                   ]
                 },
                 {
@@ -353,8 +359,9 @@
                         "default": false
                       }
                     },
-                    "required":[
-                      "id", "script"
+                    "required": [
+                      "id",
+                      "script"
                     ]
                   }
                 }
@@ -362,6 +369,29 @@
             },
             "globals": {
               "description": "Global data available for ALL commands defined by that extension."
+            },
+            "quick": {
+              "description": "Settings for 'quick execution'.",
+              "type": "object",
+              "properties": {
+                "cwd": {
+                  "description": "The initial current directory for the executions.",
+                  "type": "string"
+                },
+                "noResultInfo": {
+                  "description": "Show result of execution or not.",
+                  "type": "boolean",
+                  "default": false
+                },
+                "showResultInTab": {
+                  "description": "Show results in tab instead of a popup or not.",
+                  "type": "boolean",
+                  "default": false
+                },
+                "state": {
+                  "description": "The initial state value."
+                }
+              }
             },
             "showOutput": {
               "type": "boolean",
@@ -385,11 +415,16 @@
     "test": "node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "typescript": "^2.0.3",
-    "vscode": "^1.0.0",
-    "mocha": "^2.3.3",
+    "@types/fs-extra": "^2.1.0",
+    "@types/glob": "^5.0.30",
+    "@types/html-entities": "^1.2.15",
+    "@types/marked": "0.0.28",
+    "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.40",
-    "@types/mocha": "^2.2.32"
+    "@types/tmp": "0.0.32",
+    "mocha": "^2.3.3",
+    "typescript": "^2.0.3",
+    "vscode": "^1.0.0"
   },
   "icon": "icon.png",
   "author": {
@@ -404,6 +439,11 @@
   },
   "readmeFilename": "README.md",
   "dependencies": {
-    "moment": "^2.17.1"
+    "fs-extra": "^3.0.0",
+    "glob": "^7.1.1",
+    "html-entities": "^1.2.1",
+    "marked": "^0.3.6",
+    "moment": "^2.17.1",
+    "tmp": "0.0.31"
   }
 }

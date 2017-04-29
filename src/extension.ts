@@ -86,6 +86,16 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // quick JavaScript execution
+    let quickExecution = vscode.commands.registerCommand('extension.scriptCommands.quickExecution', () => {
+        try {
+            controller.quickExecution();
+        }
+        catch (e) {
+            vscode.window.showErrorMessage(`[QUICK EXECUTION ERROR]: ${sc_helpers.toStringSafe(e)}`);
+        }
+    });
+
     // open HTML document
     let openHtmlDoc = vscode.commands.registerCommand('extension.scriptCommands.openHtmlDoc', (doc: sc_contracts.Document) => {
         try {
@@ -137,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
                                                                         controller));
 
     context.subscriptions.push(controller,
-                               executeCmd, executeVSCmd, openHtmlDoc,
+                               executeCmd, executeVSCmd, quickExecution, openHtmlDoc,
                                htmlViewer);
 
     controller.onActivated();

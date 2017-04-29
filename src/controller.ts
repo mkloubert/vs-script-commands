@@ -28,6 +28,7 @@ import * as Moment from 'moment';
 import * as Path from 'path';
 import * as sc_contracts from './contracts';
 import * as sc_helpers from './helpers';
+import * as sc_quick from './quick';
 import * as vscode from 'vscode';
 
 
@@ -152,6 +153,13 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      */
     public get config(): sc_contracts.Configuration {
         return this._config || {};
+    }
+
+    /**
+     * Gets the underlying extension context.
+     */
+    public get context(): vscode.ExtensionContext {
+        return this._CONTEXT;
     }
 
     /** @inheritdoc */
@@ -589,13 +597,27 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     }
 
     /**
-     * Is invoked when a document is being to be saved.
+     * Is invoked when a document is going to be saved.
      * 
      * @param {vscode.TextDocumentWillSaveEvent} e The event data.
      */
     public onWillSaveTextDocument(e: vscode.TextDocumentWillSaveEvent) {
         this.onFileChange(e.document.uri, sc_contracts.FileChangeType.WillSave,
                           () => [ e ]);
+    }
+
+    /**
+     * Opens a HTML document in a new tab.
+     * 
+     * @param {string} html The HTML document (source code).
+     * @param {string} [title] The custom title for the tab.
+     * @param {any} [id] The custom ID for the document in the storage.
+     * 
+     * @returns {Promise<any>} The promise.
+     */
+    public openHtml(html: string, title?: string, id?: any): Promise<any> {
+        return sc_helpers.openHtmlDocument(this.htmlDocuments,
+                                           html, title, id);
     }
 
     /**
@@ -610,6 +632,14 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      */
     public get packageFile(): sc_contracts.PackageFile {
         return this._PACKAGE_FILE;
+    }
+
+    /**
+     * Does a "quick execution".
+     */
+    public quickExecution() {
+        return sc_quick.quickExecution
+                       .apply(this, arguments);
     }
 
     /**
@@ -982,6 +1012,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
             me._htmlDocs = [];
 
             me.reloadCommands();
+
+            // reset all "quick" stuff
+            sc_quick.reset
+                    .apply(me, []);
 
             // startup commands
             let commandsToExecute = me.getCommands().filter(x => {

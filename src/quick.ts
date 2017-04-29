@@ -230,6 +230,7 @@ function _generateHelpHTML(): string {
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
     markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
+    markdown += "| `$globals: any` | Stores the global data from the settings. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
@@ -456,6 +457,7 @@ export function quickExecution() {
                 return FS.existsSync(path);
             };
             const $extension = $me.context;
+            const $globals = $me.getGlobals();
             const $help = function() {
                 return $me.openHtml(_generateHelpHTML(),
                                     '[vs-script-commands] Quick execution');

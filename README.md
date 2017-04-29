@@ -268,17 +268,15 @@ You can define custom settings for the feature:
 ```json
 {
     "script.commands": {
-        "quick": [
-            {
-                "noResultInfo": false,
-                "showResultInTab": true,
-                
-                "state": {
-                    "MK": 23979,
-                    "TM": "1979-09-05 23:09:19.079"
-                }
+        "quick": {
+            "noResultInfo": false,
+            "showResultInTab": true,
+            
+            "state": {
+                "MK": 23979,
+                "TM": "1979-09-05 23:09:19.079"
             }
-        ]
+        }
     }
 }
 ```

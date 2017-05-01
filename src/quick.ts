@@ -209,7 +209,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
     markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
-    markdown += "| `$findFiles(globPattern: string, ignore?: string): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
+    markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";

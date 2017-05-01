@@ -1,10 +1,14 @@
 # Change Log (vs-script-commands)
 
-# 4.2.0 (April 29th, 2017; quick JavaScript execution)
+# 4.3.0 (May 1st, 2017; quick JavaScript execution - $output)
+
+* added `$output` variable for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
+
+# 4.2.0 (April 29th, 2017; quick JavaScript execution - $global)
 
 * added `$globals` variable for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
 
-# 4.1.0 (April 29th, 2017; quick JavaScript execution)
+# 4.1.0 (April 29th, 2017; quick JavaScript execution - $mkdir)
 
 * added `$mkdir` function for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
 

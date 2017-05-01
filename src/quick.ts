@@ -231,6 +231,7 @@ function _generateHelpHTML(): string {
     markdown += "| ---- | --------- |\n";
     markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
     markdown += "| `$globals: any` | Stores the global data from the settings. |\n";
+    markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
@@ -501,6 +502,7 @@ export function quickExecution() {
             const $openHtml = function(html: string, title?: string) {
                 return $me.openHtml(html, title);
             };
+            const $output = $me.outputChannel;
             const $readFile = function(file: string) {
                 file = sc_helpers.toStringSafe(file);
                 if (!Path.isAbsolute(file)) {

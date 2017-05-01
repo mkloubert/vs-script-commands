@@ -25,6 +25,7 @@
 
 import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
+const Hexy = require('hexy');
 import * as HtmlEntities from 'html-entities';
 import * as Glob from 'glob';
 import * as Marked from 'marked';
@@ -52,6 +53,7 @@ export interface ScriptModule {
 
 
 let _permanentCurrentDirectory: string;
+let _permanentDisableHexView: boolean;
 let _permanentNoResultInfo: boolean;
 let _permanentShowResultInTab: boolean;
 let _state: any;
@@ -204,6 +206,7 @@ function _generateHelpHTML(): string {
     markdown += "| ---- | --------- |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
+    markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
     markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
@@ -224,6 +227,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
     markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
+    markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
     markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
@@ -234,8 +238,10 @@ function _generateHelpHTML(): string {
     markdown += "## Variables\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
+    markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
     markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
     markdown += "| `$globals: any` | Stores the global data from the settings. |\n";
+    markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
     markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
@@ -252,7 +258,9 @@ function _generateHelpHTML(): string {
     return html;
 }
 
-function _generateHTMLForResult(expr: string, result: any): string {
+function _generateHTMLForResult(expr: string, result: any, disableHexView: boolean): string {
+    disableHexView = sc_helpers.toBooleanSafe(disableHexView);
+
     let htmlEncoder = new HtmlEntities.AllHtmlEntities();
 
     let html = '';
@@ -265,6 +273,14 @@ function _generateHTMLForResult(expr: string, result: any): string {
     try {
         if (sc_helpers.isNullOrUndefined(result)) {
             strResult = '' + result;
+        }
+        else if (Buffer.isBuffer(result)) {
+            if (disableHexView) {
+                strResult = result.toString('hex');
+            }
+            else {
+                strResult = Hexy.hexy(result);
+            }
         }
         else {
             strResult = JSON.stringify(result, null, 4);   
@@ -314,7 +330,8 @@ function _generateHTMLForResult(expr: string, result: any): string {
  * Does a "quick execution".
  */
 export function quickExecution() {
-    let $me: sc_controller.ScriptCommandController = this;
+    const $me: sc_controller.ScriptCommandController = this;
+    const $config = sc_helpers.cloneObject($me.config);
     let $state = _state;
 
     let _inputBoxValue = $me.context.workspaceState.get<string>('vsscLastQuickCommand');
@@ -327,6 +344,7 @@ export function quickExecution() {
         prompt: "The JavaScript expression to execute...",
         value: _inputBoxValue,
     }).then((_expr) => {
+        let _disableHexView = _permanentDisableHexView;
         let _noResultInfo = _permanentNoResultInfo;
         let _showResultInTab = _permanentShowResultInTab;
         const _completed = (err: any, result?: any) => {
@@ -351,7 +369,7 @@ export function quickExecution() {
                     if (_showResultInTab) {
                         // show in tab
 
-                        $me.openHtml(_generateHTMLForResult(_expr, result), '[vs-script-commands] Quick execution result').then(() => {
+                        $me.openHtml(_generateHTMLForResult(_expr, result, _disableHexView), '[vs-script-commands] Quick execution result').then(() => {
                         }, (err) => {
                             $me.log(`[ERROR] ScriptCommandController.quickExecution(4): ${sc_helpers.toStringSafe(err)}`);
                         });
@@ -416,6 +434,18 @@ export function quickExecution() {
                 }
 
                 return _currentDir;
+            };
+
+            const $disableHexView = function(flag?: boolean, permanent = false): boolean {
+                if (arguments.length > 0) {
+                    _disableHexView = sc_helpers.toBooleanSafe(flag);
+                    
+                    if (sc_helpers.toBooleanSafe(permanent)) {
+                        _permanentDisableHexView = _disableHexView;
+                    }
+                }
+
+                return _disableHexView;
             };
 
             const $error = function(msg: string) {
@@ -569,6 +599,9 @@ export function quickExecution() {
                 return _showResultInTab;
             };
             let $thisArgs: any;
+            const $toHexView = function(val: any): string {
+                return Hexy.hexy(val);
+            };
             const $unlink = function(path: string) {
                 path = sc_helpers.toStringSafe(path);
                 if (!Path.isAbsolute(path)) {
@@ -664,11 +697,13 @@ export function reset() {
     let cfg = me.config;
 
     _permanentCurrentDirectory = undefined;
+    _permanentDisableHexView = false;
     _permanentNoResultInfo = false;
     _state = undefined;
 
     if (cfg.quick) {
         _permanentCurrentDirectory = cfg.quick.cwd;
+        _permanentDisableHexView = sc_helpers.toBooleanSafe(cfg.quick.disableHexView);
         _permanentNoResultInfo = sc_helpers.toBooleanSafe(cfg.quick.noResultInfo);
         _permanentShowResultInTab = sc_helpers.toBooleanSafe(cfg.quick.showResultInTab);
         _state = sc_helpers.cloneObject(cfg.quick.state);

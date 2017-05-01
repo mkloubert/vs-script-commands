@@ -62,6 +62,10 @@ export interface Configuration {
          */
         cwd?: string;
         /**
+         * Do not show binary data in 'hex view'.
+         */
+        disableHexView?: boolean;
+        /**
          * Show result of execution or not.
          */
         noResultInfo?: boolean;
@@ -535,6 +539,14 @@ export interface ScriptCommandExecutorArguments {
      * @return {Promise<any>} The promise.
      */
     readonly stopCronJobs: (jobs: CronJobNames) => Promise<any>;
+    /**
+     * Converts a value, like a buffer or string, to "hex view".
+     * 
+     * @param {any} val The value to convert.
+     * 
+     * @return {string} The value in "hex view".
+     */
+    readonly toHexView: (val: any) => string;
 }
 
 /**

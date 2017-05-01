@@ -25,6 +25,7 @@
 
 import * as Events from 'events';
 import * as Glob from 'glob';
+const Hexy = require('hexy');
 import * as HtmlEntities from 'html-entities';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
@@ -921,7 +922,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                     reject(e);
                                                 }
                                             });
-                                        }
+                                        },
+                                        toHexView: (val) => {
+                                            return Hexy.hexy(val);
+                                        },
                                     };
 
                                     // args.button

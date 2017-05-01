@@ -1,5 +1,11 @@
 # Change Log (vs-script-commands)
 
+## 4.6.0 (May 1st, 2017; hex view of binary files)
+
+* [Buffer](https://nodejs.org/api/buffer.html) results are displayed in "hex view" now, when displaying in tab
+* added `$toHexView()`, `$disableHexView()` functions and `$config` variable for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `toHexView()` method for [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
+
 ## 4.5.0 (May 1st, 2017; find files)
 
 * added `$findFiles()` function for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

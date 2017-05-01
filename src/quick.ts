@@ -26,6 +26,7 @@
 import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
 import * as HtmlEntities from 'html-entities';
+import * as Glob from 'glob';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
 import * as Path from 'path';
@@ -208,6 +209,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
     markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
+    markdown += "| `$findFiles(globPattern: string, ignore?: string | string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
@@ -307,6 +309,7 @@ function _generateHTMLForResult(expr: string, result: any): string {
     return html;
 }
 
+
 /**
  * Does a "quick execution".
  */
@@ -326,7 +329,7 @@ export function quickExecution() {
     }).then((_expr) => {
         let _noResultInfo = _permanentNoResultInfo;
         let _showResultInTab = _permanentShowResultInTab;
-        let _completed = (err: any, result?: any) => {
+        const _completed = (err: any, result?: any) => {
             _state = $state;
 
             if (err) {
@@ -394,6 +397,7 @@ export function quickExecution() {
             };
 
             let _currentDir = _permanentCurrentDirectory;
+
             const $cwd = function(newPath?: string, permanent = false) {
                 if (arguments.length > 0) {
                     newPath = sc_helpers.toStringSafe(arguments[0]);
@@ -461,6 +465,28 @@ export function quickExecution() {
                 return FS.existsSync(path);
             };
             const $extension = $me.context;
+            const $findFiles = function(pattern: string, ignore?: string[]): string[] {
+                pattern = sc_helpers.toStringSafe(pattern);
+                if ('' === pattern.trim()) {
+                    pattern = '**';
+                }
+
+                ignore = sc_helpers.asArray(ignore)
+                                   .map(x => sc_helpers.toStringSafe(x))
+                                   .filter(x => '' !== x.trim());
+
+                return Glob.sync(pattern, <any>{
+                    cwd: _currentDir,
+                    root: _currentDir,
+                    dot: true,
+                    nocase: true,
+                    nodir: true,
+                    nosort: false,
+                    realpath: false,
+                    ignore: ignore,
+                    absolute: true,
+                });
+            };
             const $fromMarkdown = function(markdown: string): string {
                 return _fromMarkdown(markdown);
             };

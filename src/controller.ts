@@ -24,6 +24,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 import * as Events from 'events';
+import * as Glob from 'glob';
 import * as HtmlEntities from 'html-entities';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
@@ -760,6 +761,42 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                         },
                                         events: undefined,
                                         extension: undefined,
+                                        findFiles: (pattern, ignore?) => {
+                                            return new Promise<string[]>((resolve, reject) => {
+                                                try {
+                                                    pattern = sc_helpers.toStringSafe(pattern);
+                                                    if ('' === pattern.trim()) {
+                                                        pattern = '**';
+                                                    }
+
+                                                    ignore = sc_helpers.asArray(ignore)
+                                                                       .map(x => sc_helpers.toStringSafe(x))
+                                                                       .filter(x => '' !== x.trim());
+
+                                                    Glob(pattern, <any>{
+                                                        cwd: vscode.workspace.rootPath,
+                                                        root: vscode.workspace.rootPath,
+                                                        dot: true,
+                                                        nocase: true,
+                                                        nodir: true,
+                                                        nosort: false,
+                                                        realpath: false,
+                                                        ignore: ignore,
+                                                        absolute: true,
+                                                    }, (err, files) => {
+                                                        if (err) {
+                                                            reject(err);
+                                                        }
+                                                        else {
+                                                            resolve(files);
+                                                        }
+                                                    });
+                                                }
+                                                catch (e) {
+                                                    reject(e);
+                                                }
+                                            });
+                                        },
                                         fromMarkdown: (markdown) => {
                                             markdown = sc_helpers.toStringSafe(markdown);
 

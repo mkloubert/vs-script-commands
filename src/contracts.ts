@@ -399,6 +399,15 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly extension: vscode.ExtensionContext;
     /**
+     * Finds files inside current workspace using glob patterns.
+     * 
+     * @param {string} pattern The pattern.
+     * @param {string|string[]} [ignore] The pattern(s) of files to ignore.
+     * 
+     * @return {Promise<string[]>} The promise.
+     */
+    readonly findFiles: (pattern: string, ignore?: string | string[]) => Promise<string[]>;
+    /**
      * Converts Markdown to HTML.
      * 
      * @param {string} markdown The Markdown code.

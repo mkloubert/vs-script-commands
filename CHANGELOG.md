@@ -1,27 +1,27 @@
 # Change Log (vs-script-commands)
 
-# 4.4.0 (May 1st, 2017; added support for Markdown and HTML parsing)
+## 4.4.0 (May 1st, 2017; added support for Markdown and HTML parsing)
 
 * added `$fromMarkdown()`, `$htmlEncode()` and `$log()` for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * added `fromMarkdown()` and `htmlEncode()` methods for [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
 
-# 4.3.0 (May 1st, 2017; quick JavaScript execution - $output)
+## 4.3.0 (May 1st, 2017; quick JavaScript execution - $output)
 
 * added `$output` variable for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
 
-# 4.2.0 (April 29th, 2017; quick JavaScript execution - $global)
+## 4.2.0 (April 29th, 2017; quick JavaScript execution - $global)
 
 * added `$globals` variable for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
 
-# 4.1.0 (April 29th, 2017; quick JavaScript execution - $mkdir)
+## 4.1.0 (April 29th, 2017; quick JavaScript execution - $mkdir)
 
 * added `$mkdir` function for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command
 
-# 4.0.0 (April 29th, 2017; quick JavaScript execution)
+## 4.0.0 (April 29th, 2017; quick JavaScript execution)
 
 * added `Script commands: Quick execution` command that can [execute JavaScript code quickly](https://github.com/mkloubert/vs-script-commands#quick-execution-) ... enter `$help` as first action to get information about available functions and variables
 
-# 3.0.0 (April 21st, 2017; execute command before save document)
+## 3.0.0 (April 21st, 2017; execute command before save document)
 
 * added `onWillSave` setting for commands, which indicates to invoke commands if a file is going to be saved
 

@@ -1214,7 +1214,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                             };
 
                             vscode.window
-                                  .showInformationMessage("You are running new version of 'vs-script-commands' ({0:trim})!",
+                                  .showInformationMessage(`You are running new version ${sc_helpers.toStringSafe(currentVersion)} of 'vs-script-commands'`,
                                                           changeLogBtn)
                                   .then((item) => {
                                             if (!item) {

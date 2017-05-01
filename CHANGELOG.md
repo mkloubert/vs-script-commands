@@ -1,5 +1,10 @@
 # Change Log (vs-script-commands)
 
+# 4.4.0 (May 1st, 2017; added support for Markdown and HTML parsing)
+
+* added `$fromMarkdown()`, `$htmlEncode()` and `$log()` for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `fromMarkdown()` and `htmlEncode()` methods for [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
+
 # 4.3.0 (May 1st, 2017; quick JavaScript execution - $output)
 
 * added `$output` variable for [Quick execution](https://github.com/mkloubert/vs-script-commands#quick-execution-) command

@@ -24,11 +24,14 @@
 // DEALINGS IN THE SOFTWARE.
 
 import * as Events from 'events';
+import * as HtmlEntities from 'html-entities';
+import * as Marked from 'marked';
 import * as Moment from 'moment';
 import * as Path from 'path';
 import * as sc_contracts from './contracts';
 import * as sc_helpers from './helpers';
 import * as sc_quick from './quick';
+import * as sc_urls from './urls';
 import * as vscode from 'vscode';
 
 
@@ -93,6 +96,9 @@ export interface CommandEntryQuickPickItem extends sc_contracts.ScriptCommandQui
      */
     entry: CommandEntry;
 }
+
+
+const KEY_LAST_KNOWN_VERSION = 'vsscLastKnownVersion';
 
 /**
  * The controller class for that extension.
@@ -754,6 +760,15 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                         },
                                         events: undefined,
                                         extension: undefined,
+                                        fromMarkdown: (markdown) => {
+                                            markdown = sc_helpers.toStringSafe(markdown);
+
+                                            return Marked(markdown, {
+                                                gfm: true,
+                                                tables: true,
+                                                breaks: true,
+                                            });
+                                        },
                                         getCronJobs: () => {
                                             return new Promise<sc_contracts.CronJobInfo[]>((resolve, reject) => {
                                                 try {
@@ -779,6 +794,11 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                         },
                                         globals: me.getGlobals(),
                                         globalState: undefined,
+                                        htmlEncode: function(str) {
+                                            str = sc_helpers.toStringSafe(str);
+
+                                            return (new HtmlEntities.AllHtmlEntities()).encode(str);
+                                        },
                                         log: function(msg) {
                                             me.log(msg);
                                             return this;
@@ -1030,6 +1050,8 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
             if (sc_helpers.toBooleanSafe(newCfg.showOutput)) {
                 this.outputChannel.show();
             }
+
+            me.showNewVersionPopup();
         }
         catch (e) {
             me.log(`[ERROR] ScriptCommandController.reloadConfiguration(1): ${sc_helpers.toStringSafe(e)}`);
@@ -1161,6 +1183,70 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         }
         catch (e) {
             this.log(`[ERROR] ScriptCommandController.setupFileSystemWatcher(1): ${sc_helpers.toStringSafe(e)}`);
+        }
+    }
+
+    /**
+     * Shows the popup of for new version.
+     */
+    protected showNewVersionPopup() {
+        let me = this;
+
+        if (this._PACKAGE_FILE) {
+            let currentVersion = this._PACKAGE_FILE.version;
+
+            if (currentVersion) {
+                // update last known version
+                let updateCurrentVersion = false;
+                try {
+                    let lastKnownVersion: any = this._CONTEXT.globalState.get(KEY_LAST_KNOWN_VERSION, false);
+                    if (lastKnownVersion != currentVersion) {
+                        if (!sc_helpers.toBooleanSafe(this.config.disableNewVersionPopups)) {
+                            // tell the user that it runs on a new version
+                            updateCurrentVersion = true;
+
+                            // [BUTTON] show change log
+                            let changeLogBtn: sc_contracts.ActionMessageItem = {
+                                action: () => {
+                                    sc_helpers.open(sc_urls.CHANGELOG);
+                                },
+                                title: 'Show changelog...',
+                            };
+
+                            vscode.window
+                                  .showInformationMessage("You are running new version of 'vs-script-commands' ({0:trim})!",
+                                                          changeLogBtn)
+                                  .then((item) => {
+                                            if (!item) {
+                                                return;
+                                            }
+
+                                            try {
+                                                item.action();
+                                            }
+                                            catch (e) { 
+                                                me.log(`[ERROR] Deployer.showNewVersionPopup(4): ${sc_helpers.toStringSafe(e)}`);
+                                            }
+                                        }, (err) => {
+                                            me.log(`[ERROR] Deployer.showNewVersionPopup(3): ${sc_helpers.toStringSafe(err)}`);
+                                        });
+                        }
+                    }
+                }
+                catch (e) { 
+                    me.log(`[ERROR] Deployer.showNewVersionPopup(2): ${sc_helpers.toStringSafe(e)}`);
+                }
+
+                if (updateCurrentVersion) {
+                    // update last known version
+                    try {
+                        this._CONTEXT.globalState.update(KEY_LAST_KNOWN_VERSION, currentVersion);
+                    }
+                    catch (e) {
+                        me.log(`[ERROR] Deployer.showNewVersionPopup(1): ${sc_helpers.toStringSafe(e)}`);
+                    }
+                }
+            }
         }
     }
 }

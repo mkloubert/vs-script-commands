@@ -180,7 +180,7 @@ li {
 
 `;
 
-function fromMarkdown(markdown: any): string {
+function _fromMarkdown(markdown: any): string {
     markdown = sc_helpers.toStringSafe(markdown);
 
     return Marked(markdown, {
@@ -208,8 +208,11 @@ function _generateHelpHTML(): string {
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
     markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
+    markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
+    markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
+    markdown += "| `$log(msg: any): void` | Logs a message. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
@@ -240,7 +243,7 @@ function _generateHelpHTML(): string {
 
     html += HTML_HEADER;
 
-    html += fromMarkdown(markdown);
+    html += _fromMarkdown(markdown);
 
     html += HTML_FOOTER;
 
@@ -297,7 +300,7 @@ function _generateHTMLForResult(expr: string, result: any): string {
     markdown += strResult;
     markdown += "```\n";
 
-    html += fromMarkdown(markdown);
+    html += _fromMarkdown(markdown);
 
     html += HTML_FOOTER;
 
@@ -458,16 +461,27 @@ export function quickExecution() {
                 return FS.existsSync(path);
             };
             const $extension = $me.context;
+            const $fromMarkdown = function(markdown: string): string {
+                return _fromMarkdown(markdown);
+            };
             const $globals = $me.getGlobals();
             const $help = function() {
                 return $me.openHtml(_generateHelpHTML(),
                                     '[vs-script-commands] Quick execution');
+            };
+            const $htmlEncode = function(str: string) {
+                str = sc_helpers.toStringSafe(str);
+
+                return (new HtmlEntities.AllHtmlEntities()).encode(str);
             };
             const $info = function(msg: string) {
                 return vscode.window
                              .showInformationMessage( sc_helpers.toStringSafe(msg) );
             };
             let $level = 0;
+            const $log = function(msg: any) {
+                $me.log(msg);
+            };
             const $lstat = function(path: string): FS.Stats {
                 path = sc_helpers.toStringSafe(path);
                 if (!Path.isAbsolute(path)) {

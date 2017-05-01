@@ -28,6 +28,16 @@ import * as vscode from 'vscode';
 
 
 /**
+ * Describes an action based button of a popup.
+ */
+export interface ActionMessageItem extends vscode.MessageItem {
+    /**
+     * Gets the action of that button.
+     */
+    action: () => void;
+}
+
+/**
  * The configuration data for that extension.
  */
 export interface Configuration {
@@ -35,6 +45,10 @@ export interface Configuration {
      * One or more command to register.
      */
     commands?: ScriptCommand | ScriptCommand[];
+    /**
+     * Disables the display of popups that reports for a new version of that extension.
+     */
+    disableNewVersionPopups?: boolean;
     /**
      * Global data available for ALL commands defined by that extension.
      */
@@ -385,6 +399,14 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly extension: vscode.ExtensionContext;
     /**
+     * Converts Markdown to HTML.
+     * 
+     * @param {string} markdown The Markdown code.
+     * 
+     * @return {string} The generated HTML.
+     */
+    readonly fromMarkdown: (markdown: string) => string;
+    /**
      * Returns the list of current (cron) jobs.
      * 
      * @return {Promise<CronJobInfo[]>} The promise.
@@ -399,6 +421,14 @@ export interface ScriptCommandExecutorArguments {
      * and is available for ALL commands defined by that extension.
      */
     readonly globalState: any;
+    /**
+     * Encodes the HTML entities in a string.
+     * 
+     * @param {string} str The string to encode.
+     * 
+     * @return {string} The encoded string.
+     */
+    readonly htmlEncode: (str: string) => string;
     /**
      * Logs a message.
      * 

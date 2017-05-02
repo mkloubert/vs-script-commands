@@ -31,6 +31,7 @@ import * as Glob from 'glob';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
 import * as Path from 'path';
+const RandomInt = require('random-int');
 import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
@@ -185,6 +186,9 @@ li {
 
 `;
 
+const MAX_RAND = 2147483647;
+const MIN_RAND = -2147483648;
+
 function _fromMarkdown(markdown: any): string {
     markdown = sc_helpers.toStringSafe(markdown);
 
@@ -229,9 +233,10 @@ function _generateHelpHTML(): string {
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
     markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
-    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): any` | Reads a file as string. |\n";
+    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
@@ -636,6 +641,28 @@ export function quickExecution() {
                 return $me.openHtml(html, title);
             };
             const $output = $me.outputChannel;
+            const $rand = function(minOrMax?: number, max?: number): number {
+                if (arguments.length < 2) {
+                    minOrMax = parseInt(sc_helpers.toStringSafe(minOrMax).trim());
+                    if (isNaN(minOrMax)) {
+                        minOrMax = MAX_RAND;
+                    }
+
+                    return RandomInt(0, minOrMax);
+                }
+
+                max = parseInt(sc_helpers.toStringSafe(max).trim());
+                if (isNaN(max)) {
+                    max = MAX_RAND;
+                }
+
+                minOrMax = parseInt(sc_helpers.toStringSafe(minOrMax).trim());
+                if (isNaN(minOrMax)) {
+                    minOrMax = max >= 0 ? 0 : MIN_RAND;
+                }
+
+                return RandomInt(minOrMax, max);
+            };
             const $readFile = function(file: string): Buffer {
                 file = sc_helpers.toStringSafe(file);
                 if (!Path.isAbsolute(file)) {

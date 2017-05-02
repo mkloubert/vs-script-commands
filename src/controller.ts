@@ -773,6 +773,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                     ignore = sc_helpers.asArray(ignore)
                                                                        .map(x => sc_helpers.toStringSafe(x))
                                                                        .filter(x => '' !== x.trim());
+                                                    ignore = sc_helpers.distinctArray(ignore);
 
                                                     Glob(pattern, <any>{
                                                         cwd: vscode.workspace.rootPath,

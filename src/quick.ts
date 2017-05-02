@@ -563,6 +563,7 @@ export function quickExecution() {
                 ignore = sc_helpers.asArray(ignore)
                                    .map(x => sc_helpers.toStringSafe(x))
                                    .filter(x => '' !== x.trim());
+                ignore = sc_helpers.distinctArray(ignore);
 
                 return Glob.sync(pattern, <any>{
                     cwd: _currentDir,
@@ -648,7 +649,8 @@ export function quickExecution() {
                         minOrMax = MAX_RAND;
                     }
 
-                    return RandomInt(0, minOrMax);
+                    return RandomInt(minOrMax >= 0 ? 0 : MIN_RAND,
+                                     minOrMax);
                 }
 
                 max = parseInt(sc_helpers.toStringSafe(max).trim());

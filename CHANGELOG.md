@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.8.0 (May 2nd, 2017; quick execution functions)
+
+* added `$` and `$readJSON()` and `$readString()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+
 ## 4.7.0 (May 2nd, 2017; hashes and UUIDs)
 
 * added `$guid()`, `$hash()`, `$md5()`, `$sha1()`, `$sha256()` and `$uuid()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

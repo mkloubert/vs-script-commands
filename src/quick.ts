@@ -36,6 +36,7 @@ import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
 import * as UUID from 'uuid';
 import * as vscode from 'vscode';
+import * as Workflows from 'node-workflows';
 
 
 /**
@@ -205,6 +206,7 @@ function _generateHelpHTML(): string {
     markdown += "## Functions\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
+    markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
@@ -228,6 +230,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
+    markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
+    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): any` | Reads a file as string. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
@@ -404,6 +408,49 @@ export function quickExecution() {
             });
 
             let $args: any[];
+            const $ = function(...args: any[]): Promise<any[]> {
+                return new Promise<any>((resolve, reject) => {
+                    let wf = Workflows.create();
+
+                    wf.next((ctx) => {
+                        ctx.result = [];
+                    });
+
+                    if (args) {
+                        args.forEach(a => {
+                            wf.next((ctx) => {
+                                let result: any[] = ctx.result;
+
+                                return new Promise<any>((res, rej) => {
+                                    try {
+                                        Promise.resolve(a).then((r) => {
+                                            try {
+                                                result.push(r);
+
+                                                res();
+                                            }
+                                            catch (e) {
+                                                rej(e);
+                                            }
+                                        }).catch((err) => {
+                                            rej(err);
+                                        });
+                                    }
+                                    catch (e) {
+                                        rej(e);
+                                    }
+                                });
+                            });
+                        });
+                    }
+
+                    return wf.start().then((result: any[]) => {
+                        resolve(result);
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                });
+            };
             const $asString = function(val: any, enc?: string): string {
                 if (sc_helpers.isNullOrUndefined(val)) {
                     return val;
@@ -589,13 +636,39 @@ export function quickExecution() {
                 return $me.openHtml(html, title);
             };
             const $output = $me.outputChannel;
-            const $readFile = function(file: string) {
+            const $readFile = function(file: string): Buffer {
                 file = sc_helpers.toStringSafe(file);
                 if (!Path.isAbsolute(file)) {
                     file = Path.join(_currentDir, file);
                 }
 
                 return FS.readFileSync(file);
+            };
+            const $readJSON = function(file: string, enc = 'utf8'): any {
+                file = sc_helpers.toStringSafe(file);
+                if (!Path.isAbsolute(file)) {
+                    file = Path.join(_currentDir, file);
+                }
+
+                enc = sc_helpers.normalizeString(enc);
+                if ('' === enc) {
+                    enc = 'utf8';
+                }
+
+                return JSON.parse( FS.readFileSync(file).toString(enc) );
+            };
+            const $readString = function(file: string, enc = 'utf8'): string {
+                file = sc_helpers.toStringSafe(file);
+                if (!Path.isAbsolute(file)) {
+                    file = Path.join(_currentDir, file);
+                }
+
+                enc = sc_helpers.normalizeString(enc);
+                if ('' === enc) {
+                    enc = 'utf8';
+                }
+
+                return FS.readFileSync(file).toString(enc);
             };
             const $require = function(id: string): any {
                 return require(sc_helpers.toStringSafe(id));

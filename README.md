@@ -55,7 +55,9 @@ Add a `script.commands` section:
 | Name | Description |
 | ---- | --------- |
 | `commands` | One or more [commands](#commands-) to register. |
+| `disableNewVersionPopups` | Disables the display of popups that reports for a new version of that extension. Default `(false)` |
 | `globals` | Global data available for ALL commands defined by that extension. |
+| `quick` | Settings for [quick execution](#quick-execution-) feature. |
 | `showOutput` | Open output on startup or not. Default `(true)` |
 | `showInternalVSCommands` | Show internal Visual Studio Code commands in GUI or not. Default `(false)` |
 
@@ -284,6 +286,7 @@ You can define custom settings for the feature:
 | Name | Description |
 | ---- | --------- |
 | `cwd` | The initial current directory for the executions. |
+| `disableHexView` | Do not show binary data in 'hex view'. Default: `(false)` |
 | `noResultInfo` | Do not show results of executions. Default: `(false)` |
 | `showResultInTab` | Show results in tab instead of a popup or not. Default: `(false)` |
 | `state` | The initial state value. |

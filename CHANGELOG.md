@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.10.0 (May 2nd, 2017; quick execution functions)
+
+* added `$password()` and `$randomString()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+
 ## 4.9.0 (May 2nd, 2017; quick execution functions)
 
 * added `$rand()` function for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

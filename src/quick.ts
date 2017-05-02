@@ -23,6 +23,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+import * as Crypto from 'crypto';
 import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
 const Hexy = require('hexy');
@@ -233,7 +234,9 @@ function _generateHelpHTML(): string {
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
     markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
+    markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
     markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
     markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
@@ -642,6 +645,25 @@ export function quickExecution() {
                 return $me.openHtml(html, title);
             };
             const $output = $me.outputChannel;
+            const $password = function(size = 20, chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string {
+                size = parseInt(sc_helpers.toStringSafe(size).trim());
+
+                chars = sc_helpers.toStringSafe(chars);
+                if (chars.length < 1) {
+                    return null;
+                }
+
+                let bytes = Crypto.randomBytes(size * 4);
+
+                let pwd = '';
+                for (let i = 0; i < (bytes.length / 4); i++) {
+                    let b = bytes.readUInt32LE(i);
+
+                    pwd += chars[ b % chars.length ];
+                }
+
+                return pwd;
+            };
             const $rand = function(minOrMax?: number, max?: number): number {
                 if (arguments.length < 2) {
                     minOrMax = parseInt(sc_helpers.toStringSafe(minOrMax).trim());
@@ -664,6 +686,23 @@ export function quickExecution() {
                 }
 
                 return RandomInt(minOrMax, max);
+            };
+            const $randomString = function(size = 8, chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string {
+                size = parseInt(sc_helpers.toStringSafe(size).trim());
+                
+                chars = sc_helpers.toStringSafe(chars);
+                if (chars.length < 1) {
+                    return null;
+                }
+
+                let str = '';
+                for (let i = 0; i < size; i++) {
+                    let index = RandomInt(0, chars.length);
+
+                    str += chars[index];
+                }
+
+                return str;
             };
             const $readFile = function(file: string): Buffer {
                 file = sc_helpers.toStringSafe(file);

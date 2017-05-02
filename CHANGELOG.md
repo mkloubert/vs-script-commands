@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.7.0 (May 2nd, 2017; hashes and UUIDs)
+
+* added `$guid()`, `$hash()`, `$md5()`, `$sha1()`, `$sha256()` and `$uuid()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+
 ## 4.6.0 (May 1st, 2017; hex view of binary files)
 
 * [Buffer](https://nodejs.org/api/buffer.html) results are displayed in "hex view" now, when displaying in tab

@@ -34,6 +34,7 @@ import * as Path from 'path';
 import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
+import * as UUID from 'uuid';
 import * as vscode from 'vscode';
 
 
@@ -214,11 +215,14 @@ function _generateHelpHTML(): string {
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
     markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
+    markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
+    markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
     markdown += "| `$log(msg: any): void` | Logs a message. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
+    markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
@@ -226,9 +230,12 @@ function _generateHelpHTML(): string {
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
+    markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
+    markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
     markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
     markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
     markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
+    markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
     markdown += "\n";
@@ -521,6 +528,12 @@ export function quickExecution() {
                 return _fromMarkdown(markdown);
             };
             const $globals = $me.getGlobals();
+            const $guid = function(v4 = true) {
+                return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
+            };
+            const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
+                return sc_helpers.hash(algo, data, asBuffer);
+            };
             const $help = function() {
                 return $me.openHtml(_generateHelpHTML(),
                                     '[vs-script-commands] Quick execution');
@@ -555,6 +568,9 @@ export function quickExecution() {
                 FSExtra.mkdirsSync(dir);
             };
             let $maxDepth = 64;
+            const $md5 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+                return sc_helpers.hash('md5', data, asBuffer);
+            };
             const $noResultInfo = function(flag?: boolean, permanent = false): boolean {
                 if (arguments.length > 0) {
                     _noResultInfo = sc_helpers.toBooleanSafe(flag);
@@ -587,6 +603,12 @@ export function quickExecution() {
             const $setState = function(val: any): any {
                 return $state = val;
             };
+            const $sha1 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+                return sc_helpers.hash('sha1', data, asBuffer);
+            };
+            const $sha256 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+                return sc_helpers.hash('sha256', data, asBuffer);
+            };
             const $showResultInTab = function(flag?: boolean, permanent = false): boolean {
                 if (arguments.length > 0) {
                     _showResultInTab = sc_helpers.toBooleanSafe(flag);
@@ -616,6 +638,9 @@ export function quickExecution() {
                 else {
                     FS.unlinkSync(path);
                 }
+            };
+            const $uuid = function(v4 = true) {
+                return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
             };
             const $warn = function(msg: string) {
                 return vscode.window

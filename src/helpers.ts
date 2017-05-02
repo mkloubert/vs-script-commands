@@ -24,6 +24,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 import * as ChildProcess from 'child_process';
+import * as Crypto from 'crypto';
 import * as FS from 'fs';
 import * as Path from 'path';
 import * as Moment from 'moment';
@@ -172,6 +173,32 @@ export function getUrlParam(params: Object, name: string): string {
             }
         }
     }
+}
+
+/**
+ * Hashes data.
+ * 
+ * @param {string} algo The algorithm to use.
+ * @param {string|Buffer} data 
+ * @param {boolean} [raw] Return hash in binary format or as (hext) string.
+ */
+export function hash(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
+    if (isNullOrUndefined(data)) {
+        return data;
+    }
+    
+    algo = normalizeString(algo);
+    if ('' === algo) {
+        algo = 'sha256';
+    }
+
+    asBuffer = toBooleanSafe(asBuffer);
+
+    let hash = Crypto.createHash(algo)
+                     .update(data)
+                     .digest();
+
+    return asBuffer ? hash : hash.toString('hex');
 }
 
 /**

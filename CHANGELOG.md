@@ -1,5 +1,11 @@
 # Change Log (vs-script-commands)
 
+## 4.11.0 (May 2nd, 2017; quick execution)
+
+* added `$clearHistory`, `$history`, `$removeFromHistory` and `$saveToHistory` functions
+* added `$doNotShowResult` [symbol](https://www.typescriptlang.org/docs/handbook/symbols.html)
+* added `saveToGlobalHistory` and `saveToHistory` settings
+
 ## 4.10.0 (May 2nd, 2017; quick execution functions)
 
 * added `$password()` and `$randomString()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

@@ -289,6 +289,8 @@ You can define custom settings for the feature:
 | `disableHexView` | Do not show binary data in 'hex view'. Default: `(false)` |
 | `noResultInfo` | Do not show results of executions. Default: `(false)` |
 | `showResultInTab` | Show results in tab instead of a popup or not. Default: `(false)` |
+| `saveToGlobalHistory` | Save entries, that are stored automatically, to global history instead to workspace history. Default: `(false)` |
+| `saveToHistory` | Automatically save entries to history or not. Default: `(false)` |
 | `state` | The initial state value. |
 
 ## Documentation [[&uarr;](#table-of-contents)]

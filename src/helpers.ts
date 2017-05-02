@@ -156,6 +156,29 @@ export function distinctArray<T>(arr: T[]): T[] {
 }
 
 /**
+ * Removes duplicate entries from an array by using a selector.
+ * 
+ * @param {T[]} arr The input array.
+ * @param {Function} selector The selector to use.
+ * 
+ * @return {T[]} The filtered array.
+ */
+export function distinctArrayBy<T, U>(arr: T[], selector: (item: T) => U): T[] {
+    if (!arr) {
+        return arr;
+    }
+
+    if (!selector) {
+        selector = (item) => <any>item;
+    }
+
+    return arr.filter((x, i) => {
+        return arr.map(y => selector(y))
+                  .indexOf( selector(x) ) === i;
+    });
+}
+
+/**
  * Returns the value from a "parameter" object.
  * 
  * @param {Object} params The object.

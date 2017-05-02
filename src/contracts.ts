@@ -38,6 +38,20 @@ export interface ActionMessageItem extends vscode.MessageItem {
 }
 
 /**
+ * A quick pick item based on an action.
+ */
+export interface ActionQuickPickItem extends vscode.QuickPickItem {
+    /**
+     * The action to invoke.
+     */
+    action: () => any;
+    /**
+     * Additional data to store in that object.
+     */
+    tag?: any;
+}
+
+/**
  * The configuration data for that extension.
  */
 export interface Configuration {
@@ -69,6 +83,14 @@ export interface Configuration {
          * Show result of execution or not.
          */
         noResultInfo?: boolean;
+        /**
+         * Save entries, that are stored automatically, to global history instead to workspace history.
+         */
+        saveToGlobalHistory?: boolean;
+        /**
+         * Automatically save entries to history or not.
+         */
+        saveToHistory?: boolean;
         /**
          * Show results in tab instead of a popup or not.
          */

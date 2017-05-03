@@ -1,5 +1,10 @@
 # Change Log (vs-script-commands)
 
+## 4.12.0 (May 2nd, 2017; REST API and cron jobs)
+
+* added `startApi()` and `stopApi()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-rest-api](https://github.com/mkloubert/vs-rest-api)
+* added `getCronJobs()`, `restartCronJobs()`, `startCronJobs()` and `stopCronJobs()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-cron](https://github.com/mkloubert/vs-cron)
+
 ## 4.11.0 (May 2nd, 2017; quick execution)
 
 * added `$clearHistory`, `$history`, `$removeFromHistory` and `$saveToHistory` functions

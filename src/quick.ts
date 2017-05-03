@@ -603,7 +603,7 @@ function _executeExpression(_expr: string) {
                         reject(err);
                     }
                     else {
-                        resolve( _values.push(valueOrResult) );
+                        resolve( _values.push(result) );
                     }
                 };
 

@@ -768,6 +768,21 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
+        const $saveJSON = function(file: string, val: any, enc = 'utf8'): void {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
+            enc = sc_helpers.normalizeString(enc);
+            if ('' === enc) {
+                enc = 'utf8';
+            }
+
+            let json = JSON.parse(val);
+
+            FS.writeFileSync(file, new Buffer(json, enc) );
+        };
         const $saveToHistory = function(saveGlobal = false, desc?: string): void {
             _saveLastExpression = false;
             _saveToHistory = false;
@@ -1055,6 +1070,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
     markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
     markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";

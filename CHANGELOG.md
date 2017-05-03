@@ -2,7 +2,7 @@
 
 ## 4.13.0 (????? ???, ????; quick execution)
 
-* added `$ip()` function
+* added `$executeForState()` and `$ip()` functions
 * added `$lastResult`, `$previousValue` and `$nextValue` variables
 * added `saveResultsToState` [setting](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 

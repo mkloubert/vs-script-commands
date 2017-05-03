@@ -382,6 +382,17 @@ function _executeExpression(_expr: string) {
                          .apply(null,
                                 [ id ].concat( args || [] ));
         };
+        const $executeForState = function( result ): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                Promise.resolve(result).then((r) => {
+                    $state = r;
+
+                    resolve(r);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $exists = function(path: string): boolean {
             path = sc_helpers.toStringSafe(path);
             if (!Path.isAbsolute(path)) {
@@ -907,6 +918,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
     markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
+    markdown += "| `$executeForState(result: any): Promise<any>` | Executes an action and writes it to the `$state` variable. |\n";
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
     markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
@@ -963,7 +975,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
     markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
     markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
-    markdown += "| `$previousValue: any` | The value from the previuos execution. |\n";
+    markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";

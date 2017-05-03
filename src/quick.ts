@@ -24,6 +24,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 import * as Crypto from 'crypto';
+import * as Dgram from 'dgram';
 import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
 const Hexy = require('hexy');
@@ -96,25 +97,18 @@ const KEY_LAST_QUICK_COMMAND = 'vsscLastQuickCommand';
 const MAX_RAND = 2147483647;
 const MIN_RAND = -2147483648;
 
-function _normalizeHistory(history: History): HistoryEntry[] {
-    let result = sc_helpers.asArray(history)
-                           .map(h => sc_helpers.cloneObject(h))
-                           .filter(h => h)
-                           .map(h => {
-                                    h.expression = sc_helpers.toStringSafe(h.expression);
 
-                                    h.description = sc_helpers.toStringSafe(h.description).trim();
-                                    if ('' === h.description) {
-                                        h.description = undefined;
-                                    }
+function _closeUDPSafe(socket: Dgram.Socket) {
+    try {
+        if (socket) {
+            socket.close();
+        }
 
-                                    return h;
-                                })
-                           .filter(h => '' !== h.expression.trim());
-
-    result = sc_helpers.distinctArrayBy(result, h => h.expression);
-
-    return result;
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
 }
 
 function _executeExpression(_expr: string) {
@@ -670,6 +664,40 @@ function _executeExpression(_expr: string) {
 
             return FS.readFileSync(file).toString(enc);
         };
+        const $receiveFrom = function(port: number, type?: string): Promise<Buffer> {
+            port = parseInt( sc_helpers.toStringSafe(port).trim() );
+
+            type = sc_helpers.normalizeString(type);
+            if ('' === type) {
+                type = 'udp4';
+            }
+
+            return new Promise<Buffer>((resolve, reject) => {
+                let udp: Dgram.Socket;
+                try {
+                    udp = Dgram.createSocket(type);
+
+                    udp.once('error', (err) => {
+                        _closeUDPSafe(udp);
+                        
+                        reject(err);
+                    });
+
+                    udp.once('message', (data) => {
+                        _closeUDPSafe(udp);
+                        
+                        resolve(data);
+                    });
+
+                    udp.bind(port);
+                }
+                catch (e) {
+                    _closeUDPSafe(udp);
+
+                    reject(e);
+                }
+            });
+        };
         const $removeFromHistory = function(index?: number, fromGlobal = false): void {
             _saveLastExpression = false;
             _saveToHistory = false;
@@ -721,6 +749,49 @@ function _executeExpression(_expr: string) {
                     expression: _expr,
                 });
             }
+        };
+        const $sendTo = function(data: any, port: number, addr?: string, type?: string): Promise<any> {
+            if (sc_helpers.isNullOrUndefined(data)) {
+                data = Buffer.alloc(0);   
+            }
+            if (!Buffer.isBuffer(data)) {
+                data = new Buffer( sc_helpers.toStringSafe(data), 'ascii' );
+            }
+            
+            port = parseInt( sc_helpers.toStringSafe(port).trim() );
+            
+            addr = sc_helpers.normalizeString(addr);
+            if ('' === addr) {
+                addr = '127.0.0.1';
+            }
+
+            type = sc_helpers.normalizeString(type);
+            if ('' === type) {
+                type = 'udp4';
+            }
+
+            return new Promise<any>((resolve, reject) => {
+                let udp: Dgram.Socket;
+                try {
+                    udp = Dgram.createSocket(type);
+
+                    udp.send(data, port, addr, (err) => {
+                        _closeUDPSafe(udp);
+
+                        if (err) {
+                            reject(err);
+                        }
+                        else {
+                            resolve();
+                        }
+                    });
+                }
+                catch (e) {
+                    _closeUDPSafe(udp);
+
+                    reject(e);
+                }
+            });
         };
         const $setState = function(val: any): any {
             return $state = val;
@@ -943,10 +1014,12 @@ function _generateHelpHTML(): string {
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
     markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
     markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
+    markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
+    markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
     markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
@@ -1056,6 +1129,27 @@ function _generateHTMLForResult(expr: string, result: any, disableHexView: boole
     html += sc_resources.HTML_FOOTER;
 
     return html;
+}
+
+function _normalizeHistory(history: History): HistoryEntry[] {
+    let result = sc_helpers.asArray(history)
+                           .map(h => sc_helpers.cloneObject(h))
+                           .filter(h => h)
+                           .map(h => {
+                                    h.expression = sc_helpers.toStringSafe(h.expression);
+
+                                    h.description = sc_helpers.toStringSafe(h.description).trim();
+                                    if ('' === h.description) {
+                                        h.description = undefined;
+                                    }
+
+                                    return h;
+                                })
+                           .filter(h => '' !== h.expression.trim());
+
+    result = sc_helpers.distinctArrayBy(result, h => h.expression);
+
+    return result;
 }
 
 function _toHistoryEntryEx(entry: HistoryEntry,

@@ -90,6 +90,7 @@ let _permanentNoResultInfo: boolean;
 let _permanentShowResultInTab: boolean;
 let _prevVal: any;
 let _state: any;
+let _values: any[];
 
 const KEY_HISTORY = 'vsscQuickCommandHistory';
 const KEY_LAST_QUICK_COMMAND = 'vsscLastQuickCommand';
@@ -305,6 +306,9 @@ function _executeExpression(_expr: string) {
                     ++deletedEntries;
                 }
             });
+        };
+        const $clearValues = function(): void {
+            _values = [];
         };
         const $cwd = function(newPath?: string, permanent = false) {
             if (arguments.length > 0) {
@@ -590,6 +594,36 @@ function _executeExpression(_expr: string) {
             return pwd;
         };
         const $previousValue = _prevVal;
+        const $push = function(valueOrResult: any, ignorePromise = false): Promise<number> {
+            ignorePromise = sc_helpers.toBooleanSafe(ignorePromise);
+            
+            return new Promise<any>((resolve, reject) => {
+                let completed = (err: any, result?: any) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve( _values.push(valueOrResult) );
+                    }
+                };
+
+                try {
+                    if (ignorePromise) {
+                        completed(null, valueOrResult);
+                    }
+                    else {
+                        Promise.resolve(valueOrResult).then((r) => {
+                            completed(null, r);
+                        }).catch((err) => {
+                            completed(err);
+                        });
+                    }
+                }
+                catch (e) {
+                    completed(e);
+                }
+            });
+        };
         const $rand = function(minOrMax?: number, max?: number): number {
             if (arguments.length < 2) {
                 minOrMax = parseInt(sc_helpers.toStringSafe(minOrMax).trim());
@@ -891,6 +925,7 @@ function _executeExpression(_expr: string) {
         const $uuid = function(v4 = true): string {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
         };
+        const $values = _values;
         const $warn = function(msg: string) {
             return vscode.window
                          .showWarningMessage( sc_helpers.toStringSafe(msg) );
@@ -983,6 +1018,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
+    markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
@@ -1009,6 +1045,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
     markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
+    markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
     markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
     markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
@@ -1050,6 +1087,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
     markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
+    markdown += "| `$values: any[]` | The list of permanent stored values. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
 
@@ -1199,6 +1237,7 @@ export function reset() {
     _permanentNoResultInfo = false;
     _prevVal = undefined;
     _state = undefined;
+    _values = [];
 
     if (cfg.quick) {
         _permanentCurrentDirectory = cfg.quick.cwd;

@@ -2,8 +2,8 @@
 
 ## 4.13.0 (????? ???, ????; quick execution)
 
-* added `$executeForState()`, `$ip()`, `$receiveFrom()` and `$sendTo` functions
-* added `$lastResult`, `$previousValue` and `$nextValue` variables
+* added `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()` and `$sendTo` functions
+* added `$lastResult`, `$previousValue`, `$nextValue` and `$values` variables
 * added `saveResultsToState` [setting](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 
 ## 4.12.0 (May 2nd, 2017; REST API and cron jobs)

@@ -84,6 +84,10 @@ export interface Configuration {
          */
         noResultInfo?: boolean;
         /**
+         * Save all results to '$state' variable or not.
+         */
+        saveResultsToState?: boolean;
+        /**
          * Save entries, that are stored automatically, to global history instead to workspace history.
          */
         saveToGlobalHistory?: boolean;

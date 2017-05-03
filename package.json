@@ -393,6 +393,11 @@
                   "type": "boolean",
                   "default": false
                 },
+                "saveResultsToState": {
+                  "description": "Save all results to $state variable or not.",
+                  "type": "boolean",
+                  "default": false
+                },
                 "showResultInTab": {
                   "description": "Show results in tab instead of a popup or not.",
                   "type": "boolean",

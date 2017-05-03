@@ -288,6 +288,7 @@ You can define custom settings for the feature:
 | `cwd` | The initial current directory for the executions. |
 | `disableHexView` | Do not show binary data in 'hex view'. Default: `(false)` |
 | `noResultInfo` | Do not show results of executions. Default: `(false)` |
+| `saveResultsToState` | Save all results to `$state` variable or not. Default: `(false)` |
 | `showResultInTab` | Show results in tab instead of a popup or not. Default: `(false)` |
 | `saveToGlobalHistory` | Save entries, that are stored automatically, to global history instead to workspace history. Default: `(false)` |
 | `saveToHistory` | Automatically save entries to history or not. Default: `(false)` |

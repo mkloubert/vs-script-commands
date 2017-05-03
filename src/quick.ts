@@ -82,10 +82,12 @@ export interface ScriptModule {
 }
 
 
+let _lastResult: any;
 let _permanentCurrentDirectory: string;
 let _permanentDisableHexView: boolean;
 let _permanentNoResultInfo: boolean;
 let _permanentShowResultInTab: boolean;
+let _prevVal: any;
 let _state: any;
 
 const KEY_HISTORY = 'vsscQuickCommandHistory';
@@ -127,6 +129,7 @@ function _executeExpression(_expr: string) {
     const $doNotShowResult = Symbol('DO_NOT_SHOW_RESULT');
     const $workspaceHistory = _normalizeHistory($me.context.workspaceState.get<History>(KEY_HISTORY, []));
     let $state = _state;
+    let $nextValue: any;
 
     let _disableHexView = _permanentDisableHexView;
     let _noResultInfo = _permanentNoResultInfo;
@@ -135,6 +138,7 @@ function _executeExpression(_expr: string) {
     let _saveLastExpression = true;
     const _completed = (err: any, result?: any) => {
         _state = $state;
+        _prevVal = $nextValue;
 
         if (sc_helpers.toBooleanSafe(_saveLastExpression)) {
             $me.context.workspaceState.update(KEY_LAST_QUICK_COMMAND, _expr).then(() => {
@@ -143,9 +147,11 @@ function _executeExpression(_expr: string) {
             });
         }
 
+        let saveResultsToState = false;
         let saveToGlobalHistory = false;
         let saveToHistory = false;
         if ($config.quick) {
+            saveResultsToState = sc_helpers.toBooleanSafe($config.quick.saveResultsToState);
             saveToGlobalHistory = sc_helpers.toBooleanSafe($config.quick.saveToGlobalHistory);
             saveToHistory = sc_helpers.toBooleanSafe($config.quick.saveToHistory);
         }
@@ -183,6 +189,11 @@ function _executeExpression(_expr: string) {
             });
         }
         else {
+            _lastResult = result;
+            if (saveResultsToState) {
+                _state = result;
+            }
+
             if (($doNotShowResult !== result) &&
                 !_noResultInfo &&
                 ('undefined' !== typeof result)) {
@@ -511,6 +522,7 @@ function _executeExpression(_expr: string) {
             return sc_helpers.toBooleanSafe(v6) ? PublicIP.v6(opts)
                                                 : PublicIP.v4(opts);
         };
+        const $lastResult = _lastResult;
         let $level = 0;
         const $log = function(msg: any) {
             $me.log(msg);
@@ -572,6 +584,7 @@ function _executeExpression(_expr: string) {
 
             return pwd;
         };
+        const $previousValue = _prevVal;
         const $rand = function(minOrMax?: number, max?: number): number {
             if (arguments.length < 2) {
                 minOrMax = parseInt(sc_helpers.toStringSafe(minOrMax).trim());
@@ -946,8 +959,11 @@ function _generateHelpHTML(): string {
     markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
     markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
     markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
+    markdown += "| `$lastResult: any` | Stores the last result. |\n";
     markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
+    markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
     markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
+    markdown += "| `$previousValue: any` | The value from the previuos execution. |\n";
     markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
@@ -1071,9 +1087,11 @@ export function reset() {
 
     let cfg = me.config;
 
+    _lastResult = undefined;
     _permanentCurrentDirectory = undefined;
     _permanentDisableHexView = false;
     _permanentNoResultInfo = false;
+    _prevVal = undefined;
     _state = undefined;
 
     if (cfg.quick) {

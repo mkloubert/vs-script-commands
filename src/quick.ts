@@ -32,6 +32,7 @@ import * as Glob from 'glob';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
 import * as Path from 'path';
+const PublicIP = require('public-ip');
 const RandomInt = require('random-int');
 import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
@@ -501,6 +502,15 @@ function _executeExpression(_expr: string) {
             return vscode.window
                          .showInformationMessage( sc_helpers.toStringSafe(msg) );
         };
+        const $ip = function(v6 = false, useHTTPs = false, timeout = 5000): string {
+            let opts = {
+                https: sc_helpers.toBooleanSafe(useHTTPs),
+                timeout: parseInt(sc_helpers.toStringSafe(timeout).trim()),
+            };
+
+            return sc_helpers.toBooleanSafe(v6) ? PublicIP.v6(opts)
+                                                : PublicIP.v4(opts);
+        };
         let $level = 0;
         const $log = function(msg: any) {
             $me.log(msg);
@@ -894,6 +904,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
+    markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
     markdown += "| `$log(msg: any): void` | Logs a message. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
     markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";

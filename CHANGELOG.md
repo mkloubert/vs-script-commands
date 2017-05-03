@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.13.0 (????? ???, ????; quick execution)
+
+* added `$ip()` function
+
 ## 4.12.0 (May 2nd, 2017; REST API and cron jobs)
 
 * added `startApi()` and `stopApi()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-rest-api](https://github.com/mkloubert/vs-rest-api)

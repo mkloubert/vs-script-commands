@@ -2,7 +2,7 @@
 
 ## 4.13.0 (????? ???, ????; quick execution)
 
-* added `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON` and `$sendTo` functions
+* added `$appendFile()`, `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON` and `$sendTo` functions
 * added `$lastResult`, `$previousValue`, `$nextValue` and `$values` variables
 * added `saveResultsToState` [setting](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 

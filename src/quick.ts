@@ -261,6 +261,14 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $appendFile = function(file: string, data: any): void {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
+            FS.appendFileSync(file, data);
+        };
         const $asString = function(val: any, enc?: string): string {
             if (sc_helpers.isNullOrUndefined(val)) {
                 return val;
@@ -1031,6 +1039,7 @@ function _generateHelpHTML(): string {
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
     markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
+    markdown += "| `$appendFile(path: string, data: any): void` | Appends data to a file. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
     markdown += "| `$clearValues(): void` | Clears the list of values. |\n";

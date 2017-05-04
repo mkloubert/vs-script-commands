@@ -1,10 +1,11 @@
 # Change Log (vs-script-commands)
 
-## 4.13.0 (????? ???, ????; quick execution)
+## 4.13.0 (????? ???, ????; functions and variables)
 
-* added `$appendFile()`, `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON` and `$sendTo` functions
-* added `$lastResult`, `$previousValue`, `$nextValue` and `$values` variables
-* added `saveResultsToState` [setting](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `$appendFile()`, `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON` and `$sendTo` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `$events`, `$globalEvents`, `$lastResult`, `$previousValue`, `$nextValue` and `$values` variables for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `saveResultsToState` [quick execution setting](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `globalEvents` property to [ScriptCommandExecutorArguments](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.scriptcommandexecutorarguments.html) interface
 
 ## 4.12.0 (May 2nd, 2017; REST API and cron jobs)
 

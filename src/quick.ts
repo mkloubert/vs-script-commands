@@ -25,11 +25,13 @@
 
 import * as Crypto from 'crypto';
 import * as Dgram from 'dgram';
+import * as Events from 'events';
 import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
 const Hexy = require('hexy');
 import * as HtmlEntities from 'html-entities';
 import * as Glob from 'glob';
+import * as Globals from './globals';
 import * as Marked from 'marked';
 import * as Moment from 'moment';
 import * as Path from 'path';
@@ -83,6 +85,7 @@ export interface ScriptModule {
 }
 
 
+let _events: NodeJS.EventEmitter;
 let _lastResult: any;
 let _permanentCurrentDirectory: string;
 let _permanentDisableHexView: boolean;
@@ -354,6 +357,7 @@ function _executeExpression(_expr: string) {
             return vscode.window
                          .showErrorMessage( sc_helpers.toStringSafe(msg) );
         };
+        const $events = _events;
         const $execute = function(scriptPath: string): Promise<any> {
             let args = sc_helpers.toArray(arguments)
                                  .slice(1);  // without 'scriptPath'
@@ -457,6 +461,7 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
+        const $globalEvents = Globals.EVENTS;
         const $globals = $me.getGlobals();
         const $guid = function(v4 = true) {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
@@ -1104,7 +1109,9 @@ function _generateHelpHTML(): string {
     markdown += "| ---- | --------- |\n";
     markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
     markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
+    markdown += "| `$events: NodeJS.EventEmitter` | Stores the underlying [event emitter](https://nodejs.org/api/events.html). |\n";
     markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
+    markdown += "| `$globalEvents: NodeJS.EventEmitter` | Stores the global [event emitter](https://nodejs.org/api/events.html) that also can interact with all other things of that extension, like [commands](https://github.com/mkloubert/vs-script-commands#commands-). |\n";
     markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
     markdown += "| `$lastResult: any` | Stores the last result. |\n";
     markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
@@ -1256,6 +1263,16 @@ export function reset() {
 
     let cfg = me.config;
 
+    let oldEventEmitter = _events;
+    if (oldEventEmitter) {
+        try {
+            oldEventEmitter.removeAllListeners();
+        }
+        catch (e) {
+            me.log(`[ERROR] quick.reset(): ${sc_helpers.toStringSafe(e)}`);
+        }
+    } 
+
     _lastResult = undefined;
     _permanentCurrentDirectory = undefined;
     _permanentDisableHexView = false;
@@ -1280,4 +1297,6 @@ export function reset() {
         _permanentCurrentDirectory = Path.join(vscode.workspace.rootPath, _permanentCurrentDirectory);
     }
     _permanentCurrentDirectory = Path.resolve(_permanentCurrentDirectory);
+
+    _events = new Events.EventEmitter();
 }

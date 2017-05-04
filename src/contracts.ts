@@ -452,6 +452,10 @@ export interface ScriptCommandExecutorArguments {
      */
     readonly getCronJobs: () => Promise<CronJobInfo[]>;
     /**
+     * Gets the event emitter that can be used by all elements and features of that command.
+     */
+    readonly globalEvents: Events.EventEmitter;
+    /**
      * The global variables from the settings.
      */
     globals: GlobalVariables;

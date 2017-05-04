@@ -25,6 +25,7 @@
 
 import * as Events from 'events';
 import * as Glob from 'glob';
+import * as Globals from './globals';
 const Hexy = require('hexy');
 import * as HtmlEntities from 'html-entities';
 import * as Marked from 'marked';
@@ -831,6 +832,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                 }
                                             });
                                         },
+                                        globalEvents: undefined,
                                         globals: me.getGlobals(),
                                         globalState: undefined,
                                         htmlEncode: function(str) {
@@ -946,6 +948,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                     Object.defineProperty(args, 'extension', {
                                         enumerable: true,
                                         get: () => { return me._CONTEXT; }, 
+                                    });
+
+                                    // args.globalEvents
+                                    Object.defineProperty(args, 'globalEvents', {
+                                        enumerable: true,
+                                        get: () => { return Globals.EVENTS; }, 
                                     });
 
                                     // args.globalState

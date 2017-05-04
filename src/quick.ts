@@ -84,15 +84,25 @@ export interface ScriptModule {
     execute?: (...args: any[]) => any;
 }
 
+interface UDPServer {
+    connection: Dgram.Socket;
+    id: number;
+}
+
+type UDPServerAction = () => void;
+
 
 let _events: NodeJS.EventEmitter;
 let _lastResult: any;
+let _nextUDPServerID;
 let _permanentCurrentDirectory: string;
 let _permanentDisableHexView: boolean;
 let _permanentNoResultInfo: boolean;
 let _permanentShowResultInTab: boolean;
 let _prevVal: any;
 let _state: any;
+let _udpServerActions: UDPServerAction[];
+let _udpServers: UDPServer[];
 let _values: any[];
 
 const KEY_HISTORY = 'vsscQuickCommandHistory';
@@ -141,7 +151,7 @@ function _executeExpression(_expr: string) {
         if (sc_helpers.toBooleanSafe(_saveLastExpression)) {
             $me.context.workspaceState.update(KEY_LAST_QUICK_COMMAND, _expr).then(() => {
             }, (err) => {
-                $me.log(`[ERROR] ScriptCommandController.quickExecution(2): ${sc_helpers.toStringSafe(err)}`);
+                $me.log(`[ERROR] ScriptCommandController._executeExpression(1): ${sc_helpers.toStringSafe(err)}`);
             });
         }
 
@@ -168,7 +178,7 @@ function _executeExpression(_expr: string) {
 
             storage.update(KEY_HISTORY, history).then(() => {
             }, (err) => {
-                $me.log(`[ERROR] ScriptCommandController.quickExecution(6): ${sc_helpers.toStringSafe(err)}`);
+                $me.log(`[ERROR] ScriptCommandController._executeExpression(9): ${sc_helpers.toStringSafe(err)}`);
             });
         };
 
@@ -183,7 +193,7 @@ function _executeExpression(_expr: string) {
                     .apply($me,
                             []);
             }, (e) => {
-                $me.log(`[ERROR] ScriptCommandController.quickExecution(5): ${sc_helpers.toStringSafe(e)}`);
+                $me.log(`[ERROR] ScriptCommandController._executeExpression(4): ${sc_helpers.toStringSafe(e)}`);
             });
         }
         else {
@@ -204,7 +214,7 @@ function _executeExpression(_expr: string) {
 
                     $me.openHtml(_generateHTMLForResult(_expr, result, _disableHexView), '[vs-script-commands] Quick execution result').then(() => {
                     }, (err) => {
-                        $me.log(`[ERROR] ScriptCommandController.quickExecution(4): ${sc_helpers.toStringSafe(err)}`);
+                        $me.log(`[ERROR] ScriptCommandController._executeExpression(3): ${sc_helpers.toStringSafe(err)}`);
                     });
                 }
                 else {
@@ -212,7 +222,7 @@ function _executeExpression(_expr: string) {
 
                     vscode.window.showInformationMessage('' + result).then(() => {
                     }, (err) => {
-                        $me.log(`[ERROR] ScriptCommandController.quickExecution(3): ${sc_helpers.toStringSafe(err)}`);
+                        $me.log(`[ERROR] ScriptCommandController._executeExpression(2): ${sc_helpers.toStringSafe(err)}`);
                     });
                 }
             }
@@ -516,14 +526,14 @@ function _executeExpression(_expr: string) {
                     Promise.resolve( item.action() ).then(() => {
 
                     }).catch((err) => {
-                        $me.log(`[ERROR] ScriptCommandController.quickExecution(8): ${sc_helpers.toStringSafe(err)}`);
+                        $me.log(`[ERROR] ScriptCommandController._executeExpression(7): ${sc_helpers.toStringSafe(err)}`);
                     });
                 }
                 catch (e) {
-                    $me.log(`[ERROR] ScriptCommandController.quickExecution(7): ${sc_helpers.toStringSafe(e)}`);
+                    $me.log(`[ERROR] ScriptCommandController._executeExpression(6): ${sc_helpers.toStringSafe(e)}`);
                 }
             }, (err) => {
-                $me.log(`[ERROR] ScriptCommandController.quickExecution(6): ${sc_helpers.toStringSafe(err)}`);
+                $me.log(`[ERROR] ScriptCommandController._executeExpression(5): ${sc_helpers.toStringSafe(err)}`);
             });
         };
         const $htmlEncode = function(str: string): string {
@@ -722,21 +732,41 @@ function _executeExpression(_expr: string) {
             return new Promise<Buffer>((resolve, reject) => {
                 let udp: Dgram.Socket;
                 try {
-                    udp = Dgram.createSocket(type);
+                    let udp: UDPServer = {
+                        connection: Dgram.createSocket(type),
+                        id: ++_nextUDPServerID,
+                    };
 
-                    udp.once('error', (err) => {
-                        _closeUDPSafe(udp);
+                    let closeUDPServer = () => {
+                        _udpServerActions.push(() => {
+                            _closeUDPSafe(udp.connection);
+
+                            _udpServers = _udpServers.filter(other => other.id !== udp.id);
+                        });
+
+                        _handleUDPServerActionsSafe();
+                    };
+
+                    udp.connection.once('error', (err) => {
+                        closeUDPServer();
                         
                         reject(err);
                     });
 
-                    udp.once('message', (data) => {
-                        _closeUDPSafe(udp);
+                    udp.connection.once('message', (data) => {
+                        closeUDPServer();
                         
                         resolve(data);
                     });
 
-                    udp.bind(port);
+                    udp.connection.bind(port);
+
+                    _udpServers.push(udp);
+
+                    vscode.window.showInformationMessage(`UDP server runs on ID '${udp.id}'`).then(() => {
+                    }, (err) => {
+                        $me.log(`[ERROR] ScriptCommandController._executeExpression(8): ${sc_helpers.toStringSafe(err)}`);
+                    });
                 }
                 catch (e) {
                     _closeUDPSafe(udp);
@@ -903,6 +933,20 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
+        const $stopApi = function(): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                try {
+                    vscode.commands.executeCommand('extension.restApi.stopHost').then((result) => {
+                        resolve(result);
+                    }, (err) => {
+                        reject(err);
+                    });
+                }
+                catch (e) {
+                    reject(e);
+                }
+            });
+        };
         const $stopCronJobs = function(jobs: sc_contracts.CronJobNames): Promise<any> {
             return new Promise<any>((resolve, reject) => {
                 try {
@@ -917,19 +961,22 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
-        const $stopApi = function(): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                try {
-                    vscode.commands.executeCommand('extension.restApi.stopHost').then((result) => {
-                        resolve(result);
-                    }, (err) => {
-                        reject(err);
-                    });
-                }
-                catch (e) {
-                    reject(e);
-                }
+        const $stopReceiveFrom = function(id: number): boolean {
+            id = parseInt( sc_helpers.toStringSafe(id).trim() );
+            
+            let found = false;
+
+            _udpServers.filter(u => u && u.id === id).forEach(udp => {
+                _udpServerActions.push(() => {
+                    _closeUDPSafe(udp.connection);
+
+                     _udpServers = _udpServers.filter(other => other.id !== udp.id);
+                });
             });
+
+            _handleUDPServerActionsSafe();
+            
+            return found;
         };
         let $thisArgs: any;
         const $toHexView = function(val: any): string {
@@ -1095,6 +1142,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
     markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
     markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
     markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
     markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
@@ -1201,6 +1249,22 @@ function _generateHTMLForResult(expr: string, result: any, disableHexView: boole
     return html;
 }
 
+function _handleUDPServerActionsSafe(): boolean {
+    let actions = _udpServerActions;
+    if (actions) {
+        actions.filter(a => a).forEach(action => {
+            try {
+                action();
+            }
+            catch (e) { }
+        });
+
+        return true;
+    }
+    
+    return false;
+}
+
 function _normalizeHistory(history: History): HistoryEntry[] {
     let result = sc_helpers.asArray(history)
                            .map(h => sc_helpers.cloneObject(h))
@@ -1251,7 +1315,7 @@ export function quickExecution() {
         _executeExpression.apply($me,
                                  [ _expr ]);
     }, (err) => {
-        $me.log(`[ERROR] ScriptCommandController.quickExecution(1): ${sc_helpers.toStringSafe(err)}`);
+        $me.log(`[ERROR] ScriptCommandController.quickExecution(): ${sc_helpers.toStringSafe(err)}`);
     });
 }
 
@@ -1271,14 +1335,28 @@ export function reset() {
         catch (e) {
             me.log(`[ERROR] quick.reset(): ${sc_helpers.toStringSafe(e)}`);
         }
-    } 
+    }
+
+    // close old UDP server connections
+    let oldUDPServers = _udpServers;
+    if (oldUDPServers) {
+        oldUDPServers.forEach(udp => {
+            _udpServerActions.push(() => {
+                _closeUDPSafe(udp.connection);
+            });
+        });
+    }
+
+    _handleUDPServerActionsSafe();
 
     _lastResult = undefined;
+    _nextUDPServerID = -1;
     _permanentCurrentDirectory = undefined;
     _permanentDisableHexView = false;
     _permanentNoResultInfo = false;
     _prevVal = undefined;
     _state = undefined;
+    _udpServers = [];
     _values = [];
 
     if (cfg.quick) {

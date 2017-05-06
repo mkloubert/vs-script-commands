@@ -2,7 +2,7 @@
 
 ## 4.14.0 (????? ????, ????; functions and variables)
 
-* `$DELETE`, `$GET`, `$HEAD`, `$openInTab`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST`, `$workflow` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$DELETE`, `$GET`, `$HEAD`, `$htmlDecode`, `$openInTab`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST`, `$workflow`, `$xmlDecode`, `$htmlEncode` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * `$openHtml` can handle async Promise results now
 
 ## 4.13.0 (May 6th, 2017; functions and variables)

@@ -591,6 +591,11 @@ function _executeExpression(_expr: string) {
                 $me.log(`[ERROR] ScriptCommandController._executeExpression(5): ${sc_helpers.toStringSafe(err)}`);
             });
         };
+        const $htmlDecode = function(str: string): string {
+            str = sc_helpers.toStringSafe(str);
+
+            return (new HtmlEntities.AllHtmlEntities()).decode(str);
+        };
         const $htmlEncode = function(str: string): string {
             str = sc_helpers.toStringSafe(str);
 
@@ -1158,6 +1163,16 @@ function _executeExpression(_expr: string) {
 
             FS.writeFileSync(file, data);
         };
+        const $xmlDecode = function(str: string): string {
+            str = sc_helpers.toStringSafe(str);
+
+            return (new HtmlEntities.XmlEntities()).decode(str);
+        };
+        const $xmlEncode = function(str: string): string {
+            str = sc_helpers.toStringSafe(str);
+
+            return (new HtmlEntities.XmlEntities()).encode(str);
+        };
 
         const $openInTab = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
             $showResultInTab(true);
@@ -1283,6 +1298,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$HEAD(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
+    markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
     markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
@@ -1328,6 +1344,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
     markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
+    markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
+    markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";
     markdown += "\n";
 
     markdown += "\n";

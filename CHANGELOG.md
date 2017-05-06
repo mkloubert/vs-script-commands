@@ -2,7 +2,8 @@
 
 ## 4.14.0 (????? ????, ????; functions and variables)
 
-* `$DELETE`, `$GET`, `$HEAD`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST`, `$workflow` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$DELETE`, `$GET`, `$HEAD`, `$openInTab`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST`, `$workflow` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$openHtml` can handle async Promise results now
 
 ## 4.13.0 (May 6th, 2017; functions and variables)
 
@@ -13,8 +14,8 @@
 
 ## 4.12.0 (May 2nd, 2017; REST API and cron jobs)
 
-* added `startApi()` and `stopApi()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-rest-api](https://github.com/mkloubert/vs-rest-api)
-* added `getCronJobs()`, `restartCronJobs()`, `startCronJobs()` and `stopCronJobs()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-cron](https://github.com/mkloubert/vs-cron)
+* added `$startApi()` and `$stopApi()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-rest-api](https://github.com/mkloubert/vs-rest-api)
+* added `$getCronJobs()`, `$restartCronJobs()`, `$startCronJobs()` and `$stopCronJobs()` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-), that can interact with extensions like [vs-cron](https://github.com/mkloubert/vs-cron)
 
 ## 4.11.0 (May 2nd, 2017; quick execution)
 

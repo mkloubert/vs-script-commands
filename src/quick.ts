@@ -648,8 +648,18 @@ function _executeExpression(_expr: string) {
         const $now = function(): Moment.Moment {
             return Moment();
         };
-        const $openHtml = function(html: string, title?: string): Promise<any> {
-            return $me.openHtml(html, title);
+        const $openHtml = function(htmlOrResult: any, title?: string): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                Promise.resolve(htmlOrResult).then((html) => {
+                    $me.openHtml(sc_helpers.toStringSafe(html), title).then((r) => {
+                        resolve(r);
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $OPTIONS = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
@@ -1149,6 +1159,32 @@ function _executeExpression(_expr: string) {
             FS.writeFileSync(file, data);
         };
 
+        const $openInTab = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
+            $showResultInTab(true);
+
+            return new Promise<any>((resolve, reject) => {
+                Promise.resolve(valueOrResult).then((result) => {
+                    try {
+                        if (selector) {
+                            Promise.resolve( selector(result) ).then((r) => {
+                                resolve(r);
+                            }).catch((err) => {
+                                reject(err);
+                            });
+                        }
+                        else {
+                            resolve(result);
+                        }
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
+
         const $eval = function(): any {
             return eval( sc_helpers.toStringSafe(arguments[0]) );
         };
@@ -1256,7 +1292,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
-    markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
     markdown += "| `$OPTIONS(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP OPTIONS request. |\n";
     markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
     markdown += "| `$PATCH(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP PATCH request. |\n";

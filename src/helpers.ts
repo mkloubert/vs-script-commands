@@ -26,6 +26,7 @@
 import * as ChildProcess from 'child_process';
 import * as Crypto from 'crypto';
 import * as FS from 'fs';
+import * as HTTP from 'http';
 import * as Path from 'path';
 import * as Moment from 'moment';
 import * as sc_contracts from './contracts';
@@ -478,6 +479,65 @@ export function openHtmlDocument(storage: sc_contracts.Document[],
                 completed(null, result);
             }, (err) => {
                 completed(err);
+            });
+        }
+        catch (e) {
+            completed(e);
+        }
+    });
+}
+
+/**
+ * Reads the content of the HTTP request body.
+ * 
+ * @param {HTTP.IncomingMessag} msg The HTTP message with the body.
+ * 
+ * @returns {Promise<Buffer>} The promise.
+ */
+export function readHttpBody(msg: HTTP.IncomingMessage): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+        let buff: Buffer;
+        let completedInvoked = false;
+
+        let completed = (err: any) => {
+            if (completedInvoked) {
+                return;
+            }
+
+            completedInvoked = true;
+
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(buff);
+            }
+        };
+
+        try {
+            buff = Buffer.alloc(0);
+
+            msg.once('error', (err) => {
+                completed(err);
+            });
+
+            msg.on('data', (chunk) => {
+                try {
+                    if (chunk && chunk.length > 0) {
+                        if ('string' === typeof chunk) {
+                            chunk = new Buffer(chunk, 'ascii');
+                        }
+
+                        buff = Buffer.concat([ buff, chunk ]);
+                    }
+                }
+                catch (e) {
+                    completed(e);
+                }
+            });
+
+            msg.once('end', () => {
+                resolve(buff);
             });
         }
         catch (e) {

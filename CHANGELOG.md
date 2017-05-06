@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.14.0 (????? ????, ????; functions and variables)
+
+* `$DELETE`, `$GET`, `$HEAD`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+
 ## 4.13.0 (May 6th, 2017; functions and variables)
 
 * added `$appendFile()`, `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON`, `$stopReceiveFrom()` and `$sendTo` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

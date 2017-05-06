@@ -30,6 +30,8 @@ import * as FS from 'fs';
 import * as FSExtra from 'fs-extra';
 const Hexy = require('hexy');
 import * as HtmlEntities from 'html-entities';
+import * as HTTP from 'http';
+import * as HTTPs from 'https';
 import * as Glob from 'glob';
 import * as Globals from './globals';
 import * as Marked from 'marked';
@@ -41,6 +43,7 @@ import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
 import * as sc_resources from './resources';
+import * as URL from 'url';
 import * as UUID from 'uuid';
 import * as vscode from 'vscode';
 import * as Workflows from 'node-workflows';
@@ -68,6 +71,32 @@ export interface HistoryEntry {
 interface HistoryEntryEx extends HistoryEntry {
     index: number;
     source: string;
+}
+
+/**
+ * A HTTP response.
+ */
+export interface HttpResponse {
+    /**
+     * The body.
+     */
+    body: Buffer;
+    /**
+     * The response code.
+     */
+    code: number;
+    /**
+     * The list of response headers.
+     */
+    headers: { [key: string]: string };
+    /**
+     * The status message.
+     */
+    message: string;
+    /**
+     * The raw object.
+     */
+    object: HTTP.IncomingMessage;
 }
 
 /**
@@ -351,6 +380,15 @@ function _executeExpression(_expr: string) {
             return _currentDir;
         };
 
+        const $DELETE = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('DELETE', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $disableHexView = function(flag?: boolean, permanent = false): boolean {
             if (arguments.length > 0) {
                 _disableHexView = sc_helpers.toBooleanSafe(flag);
@@ -362,7 +400,6 @@ function _executeExpression(_expr: string) {
 
             return _disableHexView;
         };
-
         const $error = function(msg: string): Thenable<string> {
             return vscode.window
                          .showErrorMessage( sc_helpers.toStringSafe(msg) );
@@ -448,6 +485,15 @@ function _executeExpression(_expr: string) {
         const $fromMarkdown = function(markdown: string): string {
             return _fromMarkdown(markdown);
         };
+        const $GET = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('GET', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $getCronJobs = function(jobs: sc_contracts.CronJobNames): Promise<sc_contracts.CronJobInfo[]> {
             return new Promise<sc_contracts.CronJobInfo[]>((resolve, reject) => {
                 try {
@@ -478,6 +524,15 @@ function _executeExpression(_expr: string) {
         };
         const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash(algo, data, asBuffer);
+        };
+        const $HEAD = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('HEAD', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $help = function() {
             return $me.openHtml(_generateHelpHTML(),
@@ -596,6 +651,15 @@ function _executeExpression(_expr: string) {
         const $openHtml = function(html: string, title?: string): Promise<any> {
             return $me.openHtml(html, title);
         };
+        const $OPTIONS = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('OPTIONS', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $output = $me.outputChannel;
         const $password = function(size = 20, chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string {
             size = parseInt(sc_helpers.toStringSafe(size).trim());
@@ -615,6 +679,24 @@ function _executeExpression(_expr: string) {
             }
 
             return pwd;
+        };
+        const $PATCH = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('PATCH', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
+        const $POST = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('POST', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $previousValue = _prevVal;
         const $push = function(valueOrResult: any, ignorePromise = false): Promise<number> {
@@ -645,6 +727,15 @@ function _executeExpression(_expr: string) {
                 catch (e) {
                     completed(e);
                 }
+            });
+        };
+        const $PUT = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest('PUT', url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
             });
         };
         const $rand = function(minOrMax?: number, max?: number): number {
@@ -793,6 +884,15 @@ function _executeExpression(_expr: string) {
             if ('undefined' !== typeof removedEntry) {
                 history.splice(index, 1);
             }
+        };
+        const $REQUEST = function(method: string, url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+            return new Promise<HttpResponse>((resolve, reject) => {
+                _httpRequest(method, url, headers, body).then((result) => {
+                    resolve(result);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $require = function(id: string): any {
             return require(sc_helpers.toStringSafe(id));
@@ -1096,6 +1196,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
     markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
+    markdown += "| `$DELETE(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP DELETE request. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
     markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
@@ -1105,9 +1206,11 @@ function _generateHelpHTML(): string {
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
     markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
+    markdown += "| `$GET(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP GET request. |\n";
     markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
     markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
+    markdown += "| `$HEAD(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
     markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
@@ -1120,8 +1223,12 @@ function _generateHelpHTML(): string {
     markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(html: string, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$OPTIONS(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP OPTIONS request. |\n";
     markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
+    markdown += "| `$PATCH(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP PATCH request. |\n";
+    markdown += "| `$POST(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP POST request. |\n";
     markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
+    markdown += "| `$PUT(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP PUT request. |\n";
     markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
     markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
@@ -1129,6 +1236,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
     markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
+    markdown += "| `$REQUEST(method: string, url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP request. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
@@ -1263,6 +1371,86 @@ function _handleUDPServerActionsSafe(): boolean {
     }
     
     return false;
+}
+
+function _httpRequest(method: string, url: string, headers: any, body: string | Buffer, resultWithHeaders = false): Promise<HttpResponse> {
+    method = sc_helpers.toStringSafe(method).toUpperCase().trim();
+    
+    return new Promise<HttpResponse>((resolve, reject) => {
+        try {
+            let u = URL.parse(url);
+
+            let request: HTTP.ClientRequest;
+            let requestOpts: HTTP.RequestOptions;
+
+            let requestCallback = (resp: HTTP.IncomingMessage) => {
+                sc_helpers.readHttpBody(resp).then((body) => {
+                    resolve({
+                        body: body,
+                        code: resp.statusCode,
+                        headers: resp.headers || {},
+                        message: resp.statusMessage,
+                        object: resp,
+                    });
+                }).catch((err) => {
+                    reject(err);
+                });
+            };
+
+            let requestFactory: (options: HTTP.RequestOptions,
+                                 cb?: (res: HTTP.IncomingMessage) => void) => HTTP.ClientRequest;
+
+            requestOpts = {
+                headers: headers,
+                hostname: sc_helpers.normalizeString(u.hostname),
+                method: method,
+                protocol: sc_helpers.normalizeString(u.protocol),
+                path: sc_helpers.toStringSafe(u.pathname),
+                port: parseInt( sc_helpers.toStringSafe(u.port).trim() ),
+            };
+
+            if ('' === requestOpts.hostname) {
+                requestOpts.hostname = 'localhost';
+            }
+
+            switch (requestOpts.protocol) {
+                case 'https:':
+                    requestFactory = HTTPs.request;
+                    if (isNaN(requestOpts.port)) {
+                        requestOpts.port = 443;
+                    }
+                    break;
+
+                default:
+                    requestFactory = HTTP.request;
+                    if (isNaN(requestOpts.port)) {
+                        requestOpts.port = 80;
+                    }
+                    break;
+            }
+
+            request = requestFactory(requestOpts, requestCallback);
+
+            request.once('error', (err) => {
+                reject(err);
+            });
+
+            if (!sc_helpers.isNullOrUndefined(body)) {
+                if (!Buffer.isBuffer(body)) {
+                    body = new Buffer(sc_helpers.toStringSafe(body), 'ascii');
+                }
+
+                if (body.length > 0) {
+                    request.write(body);
+                }
+            }
+
+            request.end();
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
 }
 
 function _normalizeHistory(history: History): HistoryEntry[] {

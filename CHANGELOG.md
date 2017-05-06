@@ -1,6 +1,6 @@
 # Change Log (vs-script-commands)
 
-## 4.13.0 (????? ???, ????; functions and variables)
+## 4.13.0 (May 6th, 2017; functions and variables)
 
 * added `$appendFile()`, `$executeForState()`, `$ip()`, `$push()`, `$receiveFrom()`, `$saveJSON`, `$stopReceiveFrom()` and `$sendTo` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * added `$events`, `$globalEvents`, `$lastResult`, `$previousValue`, `$nextValue` and `$values` variables for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

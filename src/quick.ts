@@ -1105,6 +1105,40 @@ function _executeExpression(_expr: string) {
             return vscode.window
                          .showWarningMessage( sc_helpers.toStringSafe(msg) );
         };
+        const $workflow = function(...args: (Workflows.WorkflowAction | string)[]): Promise<any> {
+            let wf = Workflows.create();
+
+            if (args) {
+                args.filter(a => !sc_helpers.isNullOrUndefined(a)).forEach((a) => {
+                    wf.next((wfCtx) => {
+                        return new Promise<any>((resolve, reject) => {
+                            try {
+                                let result: any;
+                                if ('function' === typeof a) {
+                                    result = a(wfCtx);
+                                }
+                                else {
+                                    result = eval('$execute(a, wfCtx)');
+                                }
+
+                                Promise.resolve(result).then((r) => {
+                                    wfCtx.result = r;
+
+                                    resolve(r);
+                                }).catch((err) => {
+                                    reject(err);
+                                });
+                            }
+                            catch (e) {
+                                reject(e);
+                            }
+                        });
+                    });
+                });
+            }
+
+            return wf.start($state);
+        };
         const $workspace = vscode.workspace.rootPath;
         const $writeFile = function(file: string, data: any): void {
             file = sc_helpers.toStringSafe(file);
@@ -1256,6 +1290,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
+    markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
     markdown += "\n";
 
     markdown += "\n";

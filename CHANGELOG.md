@@ -2,7 +2,7 @@
 
 ## 4.14.0 (????? ????, ????; functions and variables)
 
-* `$DELETE`, `$GET`, `$HEAD`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$DELETE`, `$GET`, `$HEAD`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$REQUEST`, `$workflow` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 
 ## 4.13.0 (May 6th, 2017; functions and variables)
 

@@ -303,6 +303,27 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $addValue = function(valueOrResult: any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                try {
+                    Promise.resolve( valueOrResult ).then((result) => {
+                        try {
+                            $values.push(result);
+
+                            resolve(result);
+                        }
+                        catch (e) {
+                            reject(e);
+                        }
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                catch (e) {
+                    reject(e);
+                }
+            });
+        };
         const $appendFile = function(file: string, data: any): void {
             file = sc_helpers.toStringSafe(file);
             if (!Path.isAbsolute(file)) {
@@ -1276,6 +1297,7 @@ function _generateHelpHTML(): string {
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
     markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
+    markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
     markdown += "| `$appendFile(path: string, data: any): void` | Appends data to a file. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";

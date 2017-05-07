@@ -426,6 +426,52 @@ function _executeExpression(_expr: string) {
 
         let _currentDir = _permanentCurrentDirectory;
 
+        const $base64Decode = function(valueOrResult: any): Promise<Buffer> {
+            return new Promise<Buffer>((resolve, reject) => {
+                $unwrap(valueOrResult).then((value) => {
+                    try {
+                        value = $asString(value);
+
+                        let buffer: Buffer;
+
+                        if (!sc_helpers.isEmptyString(value)) {
+                            buffer = new Buffer(value.trim(), 'base64');
+                        }
+
+                        resolve(buffer);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
+        const $base64Encode = function(valueOrResult: any): Promise<string> {
+            return new Promise<string>((resolve, reject) => {
+                $unwrap(valueOrResult).then((value) => {
+                    try {
+                        let base64: string;
+
+                        if (!sc_helpers.isNullOrUndefined(value)) {
+                            if (!Buffer.isBuffer(value)) {
+                                value = new Buffer( $asString(value, 'ascii') );
+                            }
+
+                            base64 = value.toString('base64');
+                        }
+
+                        resolve(base64);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $clearHistory = function(clearGlobal?: boolean): void {
             _saveLastExpression = false;
             _saveToHistory = false;
@@ -1670,6 +1716,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
     markdown += "| `$appendFile(path: string, data: any): void` | Appends data to a file. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
+    markdown += "| `$baseDecode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
+    markdown += "| `$baseEncode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
     markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
     markdown += "| `$clone(valueOrResult: any): Promise<any>` | Clones a value or result. |\n";
@@ -1701,7 +1749,9 @@ function _generateHelpHTML(): string {
     markdown += "| `$log(msg: any): void` | Logs a message. |\n";
     markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
+    markdown += "| `$max(...valuesOrResults: any[]): Promise<any>` | Returns the maximum value from a list of values. |\n";
     markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
+    markdown += "| `$min(...valuesOrResults: any[]): Promise<any>` | Returns the minimum value from a list of values. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";

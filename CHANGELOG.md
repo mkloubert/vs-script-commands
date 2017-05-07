@@ -7,6 +7,7 @@
 * `$setState` function can also handle async (Promise based) results now
 * `$asString` serializes general objects to JSON now
 * binary data is shown in tab automatically now
+* hash functions run async now
 
 ## 4.14.0 (May 7th, 2017; functions and variables)
 

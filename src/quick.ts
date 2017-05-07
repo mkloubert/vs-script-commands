@@ -339,6 +339,41 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $hash = function(algo: string, dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
+            return new Promise<string | Buffer>((resolve, reject) => {
+                try {
+                    $unwrap(dataOrResult).then((data) => {
+                        try {
+                            let hash: string | Buffer;
+
+                            if (!sc_helpers.isNullOrUndefined(data)) {
+                                if (!Buffer.isBuffer(data)) {
+                                    if ('object' === typeof data) {
+                                        data = JSON.stringify(data);
+                                    }
+                                    else {
+                                        data = sc_helpers.toStringSafe(data);
+                                    }
+                                }
+
+                                hash = sc_helpers.hash(algo, data, asBuffer);
+                            }
+
+                            resolve(hash);
+                        }
+                        catch (e) {
+                            reject(e);
+                        }
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                catch (e) {
+                    reject(e);
+                }
+            });
+        };
+
         const $ = function(...args: any[]): Promise<any[]> {
             return new Promise<any>((resolve, reject) => {
                 let wf = Workflows.create();
@@ -733,9 +768,6 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
-            return sc_helpers.hash(algo, data, asBuffer);
-        };
         const $HEAD = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
                 _httpRequest(_currentDir, 'HEAD', url, headersOrFileWithHeaders, body).then((result) => {
@@ -878,6 +910,9 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $md5 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
+            return $hash('md5', dataOrResult, asBuffer);
+        };
         const $mkdir = function(dir: string): void {
             dir = sc_helpers.toStringSafe(dir);
             if (!Path.isAbsolute(dir)) {
@@ -885,9 +920,6 @@ function _executeExpression(_expr: string) {
             }
 
             FSExtra.mkdirsSync(dir);
-        };
-        const $md5 = function(data: string | Buffer, asBuffer = false): string | Buffer {
-            return sc_helpers.hash('md5', data, asBuffer);
         };
         const $min = function(...args: any[]): Promise<any> {
             return new Promise<any>((resolve, reject) => {
@@ -1366,11 +1398,11 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
-        const $sha1 = function(data: string | Buffer, asBuffer = false): string | Buffer {
-            return sc_helpers.hash('sha1', data, asBuffer);
+        const $sha1 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
+            return $hash('sha1', dataOrResult, asBuffer);
         };
-        const $sha256 = function(data: string | Buffer, asBuffer = false): string | Buffer {
-            return sc_helpers.hash('sha256', data, asBuffer);
+        const $sha256 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
+            return $hash('sha256', dataOrResult, asBuffer);
         };
         const $showResultInTab = function(flag?: boolean, permanent = false): boolean {
             if (arguments.length > 0) {
@@ -1783,7 +1815,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
     markdown += "| `$gunzip(bufferOrBase64StringAsValueOrResult: any): Buffer` | UNcompresses data with GZIP. |\n";
     markdown += "| `$gzip(valueOrResult: any, base64: boolean = false): Promise<any>` | Compresses data with GZIP. |\n";
-    markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
+    markdown += "| `$hash(algorithm: string, dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data. |\n";
     markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
@@ -1795,7 +1827,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
     markdown += "| `$max(...valuesOrResults: any[]): Promise<any>` | Returns the maximum value from a list of values. |\n";
-    markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
+    markdown += "| `$md5(dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data by MD5. |\n";
     markdown += "| `$min(...valuesOrResults: any[]): Promise<any>` | Returns the minimum value from a list of values. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
     markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
@@ -1826,8 +1858,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$setState(valueOrResult: any, selector?: Function): Promise<any>): Promise<any>` | Sets the value of `$state` variable by using an optional value selector and returns the new value. |\n";
-    markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
-    markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
+    markdown += "| `$sha1(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-1. |\n";
+    markdown += "| `$sha256(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-256. |\n";
     markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
     markdown += "| `$shuffle(valueOrResult: any): Promise<any>` | Shuffles data. |\n";
     markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";

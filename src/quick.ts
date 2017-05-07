@@ -1597,6 +1597,8 @@ function _executeExpression(_expr: string) {
                 $GET(url).then((result) => {
                     try {
                         if (!sc_helpers.isEmptyString(file)) {
+                            $noResultInfo(true);
+
                             $writeFile(file, result.body);   
                         }
                         

@@ -1,5 +1,9 @@
 # Change Log (vs-script-commands)
 
+## 4.15.0 (?????? ????, ????; functions and variables)
+
+* `$download` function for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+
 ## 4.14.0 (May 7th, 2017; functions and variables)
 
 * `$addValue`, `$DELETE`, `$GET`, `$HEAD`, `$htmlDecode`, `$openInTab`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$readJSONFrom`, `$REQUEST`, `$sendJSONTo`, `$workflow`, `$xmlDecode`, `$htmlEncode` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)

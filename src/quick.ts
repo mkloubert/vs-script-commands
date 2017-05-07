@@ -1220,6 +1220,24 @@ function _executeExpression(_expr: string) {
             return (new HtmlEntities.XmlEntities()).encode(str);
         };
 
+        const $download = function(url: string, file?: string): Promise<Buffer> {
+            return new Promise<Buffer>((resolve, reject) => {
+                $GET(url).then((result) => {
+                    try {
+                        if (!sc_helpers.isEmptyString(file)) {
+                            $writeFile(file, result.body);   
+                        }
+                        
+                        resolve(result.body);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $openInTab = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
             $showResultInTab(true);
 
@@ -1330,6 +1348,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
     markdown += "| `$DELETE(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
+    markdown += "| `$download(url: string, targetFile?: string): Promise<Buffer>` | Downloads data from an URL. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
     markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
     markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";

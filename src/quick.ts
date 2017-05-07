@@ -339,25 +339,36 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $asString = function(val: any, enc?: string): string {
-            if (sc_helpers.isNullOrUndefined(val)) {
-                return val;
-            }
-
+        const $asString = function(ValueOrResult: any, enc?: string): Promise<string> {
             enc = sc_helpers.normalizeString(enc);
             if ('' === enc) {
                 enc = undefined;
             }
 
-            if (Buffer.isBuffer(val)) {
-                return val.toString(enc);
-            }
+            return new Promise<string>((resolve, reject) => {
+                $unwrap(ValueOrResult).then((val) => {
+                    try {    
+                        if (!sc_helpers.isNullOrUndefined(val)) {
+                            if (Buffer.isBuffer(val)) {
+                                val = val.toString(enc);
+                            }
+                            else if ('object' === typeof val) {
+                                val = JSON.stringify(val);
+                            }
+                            else {
+                                val = sc_helpers.toStringSafe(val);
+                            }
+                        }
 
-            if ('object' === typeof val) {
-                return JSON.stringify(val);
-            }
-
-            return sc_helpers.toStringSafe(val);
+                        resolve(val);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $readFile = function(file: string): Promise<Buffer> {
             file = sc_helpers.toStringSafe(file);
@@ -534,17 +545,24 @@ function _executeExpression(_expr: string) {
 
         const $base64Decode = function(valueOrResult: any): Promise<Buffer> {
             return new Promise<Buffer>((resolve, reject) => {
-                $unwrap(valueOrResult).then((value) => {
+                $unwrap(valueOrResult).then((b64) => {
                     try {
-                        value = $asString(value);
+                        $asString(b64).then((value) => {
+                            try {
+                                let buffer: Buffer;
 
-                        let buffer: Buffer;
+                                if (!sc_helpers.isEmptyString(value)) {
+                                    buffer = new Buffer(value.trim(), 'base64');
+                                }
 
-                        if (!sc_helpers.isEmptyString(value)) {
-                            buffer = new Buffer(value.trim(), 'base64');
-                        }
-
-                        resolve(buffer);
+                                resolve(buffer);
+                            }
+                            catch (e) {
+                                reject(e);
+                            }
+                        }).catch((err) => {
+                            reject(err);
+                        });
                     }
                     catch (e) {
                         reject(e);
@@ -561,14 +579,25 @@ function _executeExpression(_expr: string) {
                         let base64: string;
 
                         if (!sc_helpers.isNullOrUndefined(value)) {
-                            if (!Buffer.isBuffer(value)) {
-                                value = new Buffer( $asString(value, 'ascii') );
+                            if (Buffer.isBuffer(value)) {
+                                resolve(value.toString('base64'));
                             }
-
-                            base64 = value.toString('base64');
+                            else {
+                                $asString(value, 'utf8').then((str) => {
+                                    try {
+                                        resolve( new Buffer(str, 'ascii').toString('base64') );
+                                    }
+                                    catch (e) {
+                                        reject(e);
+                                    }
+                                }).catch((err) => {
+                                    reject(err);
+                                });
+                            }
                         }
-
-                        resolve(base64);
+                        else {
+                            resolve();
+                        }
                     }
                     catch (e) {
                         reject(e);
@@ -805,23 +834,39 @@ function _executeExpression(_expr: string) {
             return new Promise<Buffer | string>((resolve, reject) => {
                 $unwrap(valueOrResult).then((val) => {
                     try {
+                        let compress = () => {
+                            ZLib.gzip(val, (err, compressedData) => {
+                                try {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    else {
+                                        resolve(base64 ? compressedData.toString('base64')
+                                                       : compressedData);
+                                    }
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            });
+                        };
+
                         if (sc_helpers.isNullOrUndefined(val)) {
                             val = Buffer.alloc(0);
                         }
 
-                        if (!Buffer.isBuffer(val)) {
-                            val = new Buffer( $asString(val) );
+                        if (Buffer.isBuffer(val)) {
+                            compress();
                         }
+                        else {
+                            $asString(val).then((str) => {
+                                val = new Buffer(str, 'ascii');
 
-                        ZLib.gzip(val, (err, compressedData) => {
-                            if (err) {
+                                compress();
+                            }).catch((err) => {
                                 reject(err);
-                            }
-                            else {
-                                resolve(base64 ? compressedData.toString('base64')
-                                               : compressedData);
-                            }
-                        });
+                            });
+                        }
                     }
                     catch (e) {
                         reject(e);
@@ -1875,7 +1920,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
     markdown += "| `$appendFile(path: string, valueOrResult: any): Promise<any>` | Appends data to a file. |\n";
-    markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
+    markdown += "| `$asString(val: any): Promise<string>` | Returns a value as string. |\n";
     markdown += "| `$baseDecode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
     markdown += "| `$baseEncode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";

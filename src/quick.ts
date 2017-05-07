@@ -448,9 +448,9 @@ function _executeExpression(_expr: string) {
             return _currentDir;
         };
 
-        const $DELETE = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $DELETE = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('DELETE', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'DELETE', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -553,9 +553,9 @@ function _executeExpression(_expr: string) {
         const $fromMarkdown = function(markdown: string): string {
             return _fromMarkdown(markdown);
         };
-        const $GET = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $GET = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('GET', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'GET', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -593,9 +593,9 @@ function _executeExpression(_expr: string) {
         const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash(algo, data, asBuffer);
         };
-        const $HEAD = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $HEAD = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('HEAD', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'HEAD', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -734,9 +734,9 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $OPTIONS = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $OPTIONS = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('OPTIONS', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'OPTIONS', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -763,18 +763,18 @@ function _executeExpression(_expr: string) {
 
             return pwd;
         };
-        const $PATCH = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $PATCH = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('PATCH', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'PATCH', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
                 });
             });
         };
-        const $POST = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $POST = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('POST', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'POST', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -812,9 +812,9 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
-        const $PUT = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $PUT = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest('PUT', url, headers, body).then((result) => {
+                _httpRequest(_currentDir, 'PUT', url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -987,9 +987,9 @@ function _executeExpression(_expr: string) {
                 history.splice(index, 1);
             }
         };
-        const $REQUEST = function(method: string, url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $REQUEST = function(method: string, url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(method, url, headers, body).then((result) => {
+                _httpRequest(_currentDir, method, url, headersOrFileWithHeaders, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -1484,7 +1484,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
     markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
-    markdown += "| `$DELETE(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
+    markdown += "| `$DELETE(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
     markdown += "| `$download(url: string, targetFile?: string): Promise<Buffer>` | Downloads data from an URL. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
@@ -1495,11 +1495,11 @@ function _generateHelpHTML(): string {
     markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
     markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
     markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
-    markdown += "| `$GET(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
+    markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
     markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
     markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
-    markdown += "| `$HEAD(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
+    markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
     markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
     markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
@@ -1515,12 +1515,12 @@ function _generateHelpHTML(): string {
     markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
     markdown += "| `$openInEditor(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new text editor by using an optional selector function for result to show. |\n";
     markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
-    markdown += "| `$OPTIONS(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
+    markdown += "| `$OPTIONS(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
     markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
-    markdown += "| `$PATCH(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PATCH request. |\n";
-    markdown += "| `$POST(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP POST request. |\n";
+    markdown += "| `$PATCH(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PATCH request. |\n";
+    markdown += "| `$POST(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP POST request. |\n";
     markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
-    markdown += "| `$PUT(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
+    markdown += "| `$PUT(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
     markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
     markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
     markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
@@ -1529,7 +1529,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
-    markdown += "| `$REQUEST(method: string, url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP request. |\n";
+    markdown += "| `$REQUEST(method: string, url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP request. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
@@ -1672,8 +1672,19 @@ function _handleUDPServerActionsSafe(): boolean {
     return false;
 }
 
-function _httpRequest(method: string, url: string, headers: any, body: string | Buffer, resultWithHeaders = false): Promise<HttpResponse> {
+function _httpRequest(currentDir: string, method: string, url: string, headers: any, body: string | Buffer): Promise<HttpResponse> {
     method = sc_helpers.toStringSafe(method).toUpperCase().trim();
+
+    currentDir = sc_helpers.toStringSafe(currentDir);
+    if ('' === currentDir.trim()) {
+        currentDir = './';
+    }
+    
+    if (!Path.isAbsolute(currentDir)) {
+        currentDir = Path.join(vscode.workspace.rootPath, currentDir);
+    }
+
+    currentDir = Path.resolve(currentDir);
     
     return new Promise<HttpResponse>((resolve, reject) => {
         try {
@@ -1700,7 +1711,6 @@ function _httpRequest(method: string, url: string, headers: any, body: string | 
                                  cb?: (res: HTTP.IncomingMessage) => void) => HTTP.ClientRequest;
 
             requestOpts = {
-                headers: headers,
                 hostname: sc_helpers.normalizeString(u.hostname),
                 method: method,
                 protocol: sc_helpers.normalizeString(u.protocol),
@@ -1744,7 +1754,55 @@ function _httpRequest(method: string, url: string, headers: any, body: string | 
                 }
             }
 
-            request.end();
+            let startRequest = () => {
+                try {
+                    request.end();
+                }
+                catch (e) {
+                    reject(e);
+                }
+            };
+
+            let getHeaders = () => {
+                if (sc_helpers.isNullOrUndefined(headers)) {
+                    startRequest();  // no headers
+                }
+                else {
+                    if ('object' === typeof headers) {
+                        requestOpts.headers = headers;
+
+                        startRequest();
+                    }
+                    else {
+                        // from file
+
+                        let headerFile = sc_helpers.toStringSafe(headers);
+                        if (!Path.isAbsolute(headerFile)) {
+                            headerFile = Path.join(currentDir, headerFile);
+                        }
+
+                        FS.readFile(headerFile, (err, data) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                try {
+                                    if (data.length > 0) {
+                                        requestOpts.headers = JSON.parse( data.toString('utf8') );
+                                    }
+
+                                    startRequest();
+                                }
+                                catch (e) {
+                                    reject(e);
+                                }
+                            }
+                        });
+                    }
+                }
+            };
+
+            getHeaders();
         }
         catch (e) {
             reject(e);

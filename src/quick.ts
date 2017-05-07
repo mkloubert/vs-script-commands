@@ -902,6 +902,25 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
+        const $receiveJSONFrom = function(port: number, type?: string): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                $receiveFrom(port, type).then((data) => {
+                    try {
+                        let val: any;
+                        if (data.length > 0) {
+                            val = JSON.parse( data.toString('utf8') );
+                        }
+
+                        resolve(val);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $removeFromHistory = function(index?: number, fromGlobal = false): void {
             _saveLastExpression = false;
             _saveToHistory = false;
@@ -1020,6 +1039,12 @@ function _executeExpression(_expr: string) {
                     reject(e);
                 }
             });
+        };
+        const $sendJSONTo = function(data: any, port: number, addr?: string, type?: string): Promise<any> {
+            let json = JSON.stringify(data);
+
+            return $sendTo(new Buffer(json, 'utf8'), 
+                           port, addr, type);
         };
         const $setState = function(val: any): any {
             return $state = val;
@@ -1344,12 +1369,14 @@ function _generateHelpHTML(): string {
     markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
     markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
     markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
     markdown += "| `$REQUEST(method: string, url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP request. |\n";
     markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
     markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
+    markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";

@@ -261,8 +261,16 @@ function _executeExpression(_expr: string) {
 
     try {
         let $args: any[];
-        const $unwrap = function(valueOrResult: any, maxDepth = 64): Promise<any> {
+        let $maxDepth = 64;
+
+        const $unwrap = function(valueOrResult: any, maxDepth?: number): Promise<any> {
             maxDepth = parseInt( sc_helpers.toStringSafe(maxDepth).trim() );
+            if (isNaN(maxDepth)) {
+                maxDepth = $maxDepth;
+            }
+            if (isNaN(maxDepth)) {
+                maxDepth = 64;
+            }
 
             return new Promise<any>((resolve, reject) => {
                 let completed = (err: any, v?: any) => {
@@ -870,7 +878,6 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        let $maxDepth = 64;
         const $mkdir = function(dir: string): void {
             dir = sc_helpers.toStringSafe(dir);
             if (!Path.isAbsolute(dir)) {

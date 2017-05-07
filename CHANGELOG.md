@@ -2,7 +2,8 @@
 
 ## 4.15.0 (?????? ????, ????; functions and variables)
 
-* `$download` and `$select` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$download`, `$openInEditor` and `$select` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$setState` function can also handle async (Promise based) results now
 
 ## 4.14.0 (May 7th, 2017; functions and variables)
 

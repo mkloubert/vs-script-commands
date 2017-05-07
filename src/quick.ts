@@ -1051,10 +1051,15 @@ function _executeExpression(_expr: string) {
                 Promise.resolve(valueOrResult).then((val) => {
                     try {
                         if (selector) {
-                            val = selector(val);
+                            Promise.resolve( selector(val) ).then((v) => {
+                                resolve(v);
+                            }).catch((err) => {
+                                reject(err);
+                            });
                         }
-                        
-                        resolve(val);
+                        else {
+                            resolve(val);
+                        }
                     }
                     catch (e) {
                         reject(e);
@@ -1064,8 +1069,39 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $setState = function(val: any): any {
-            return $state = val;
+        const $setState = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                try {
+                    Promise.resolve( valueOrResult ).then((val) => {
+                        try {
+                            let finished = (v: any) => {
+                                $state = v;
+
+                                resolve(v);
+                            };
+
+                            if (selector) {
+                                Promise.resolve( selector(val) ).then((v) => {
+                                    finished(v);
+                                }).catch((err) => {
+                                    reject(err);
+                                });
+                            }
+                            else {
+                                finished(val);
+                            }
+                        }
+                        catch (e) {
+                            reject(e);
+                        }
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                catch (e) {
+                    reject(e);
+                }
+            });
         };
         const $sha1 = function(data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash('sha1', data, asBuffer);
@@ -1256,6 +1292,81 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $openInEditor = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                let openEditor = (result: any) => {
+                    if (sc_helpers.isNullOrUndefined(result)) {
+                        result = '';
+                    }
+                    else {
+                        if (Buffer.isBuffer(result)) {
+                            result = result.toString('utf8');
+                        }
+                        else {
+                            result = sc_helpers.toStringSafe(result);
+                        }
+                    }
+
+                    vscode.workspace.openTextDocument(null).then((doc) => {
+                        vscode.window.showTextDocument(doc).then(() => {
+                            try {
+                                let visibleTextEditors = vscode.window.visibleTextEditors;
+
+                                let editor: vscode.TextEditor;
+                                for (let i = 0; i < visibleTextEditors.length; i++) {
+                                    let e = visibleTextEditors[i];
+
+                                    if (e.document === doc) {
+                                        editor = e;
+                                        break;
+                                    }
+                                }
+
+                                if (editor) {
+                                    sc_helpers.setContentOfTextEditor(editor, result).then(() => {
+                                        $noResultInfo(true);
+
+                                        resolve();
+                                    }).catch((e) => {
+                                        reject(e);
+                                    });
+                                }
+                                else {
+                                    reject(new Error('No matching text editor found!'));
+                                }
+                            }
+                            catch (e) {
+                                reject(e);
+                            }
+                        }, (err) => {
+                            reject(err);
+                        });
+                    }, (err) => {
+                        reject(err);
+                    });
+                };
+
+                Promise.resolve(valueOrResult).then((result) => {
+                    try {
+                        if (selector) {
+                            Promise.resolve( selector(result) ).then((r) => {
+                                openEditor(r);
+                            }).catch((err) => {
+                                reject(err);
+                            });
+                        }
+                        else {
+                            openEditor(result);
+                        }
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $openInTab = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
             $showResultInTab(true);
 
@@ -1393,6 +1504,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$openInEditor(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new text editor by using an optional selector function for result to show. |\n";
     markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
     markdown += "| `$OPTIONS(url: string, headers?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
     markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
@@ -1416,7 +1528,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$select(valueOrResult: any, selector: Function): Promise<any>` | Projects a value to a new one by using a selector function. |\n";
     markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
+    markdown += "| `$setState(valueOrResult: any, selector?: Function): Promise<any>): Promise<any>` | Sets the value of `$state` variable by using an optional value selector and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
     markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
     markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";

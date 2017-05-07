@@ -596,6 +596,44 @@ export function replaceAllStrings(str: any, searchValue: any, replaceValue: any)
 }
 
 /**
+ * Sets the content of a text editor.
+ * 
+ * @param {vscode.TextEditor} editor The text editor.
+ * @param {string} value The new value.
+ * 
+ * @param {PromiseLike<vscode.TextDocument>} The promise.
+ */
+export function setContentOfTextEditor(editor: vscode.TextEditor, value: string): Promise<vscode.TextDocument> {
+    value = toStringSafe(value);
+    
+    return new Promise<any>((resolve, reject) => {
+        let completed = createSimplePromiseCompletedAction<vscode.TextDocument>(resolve, reject);
+        
+        try {
+            editor.edit((builder) => {
+                try {
+                    let doc = editor.document;
+                    if (doc) {
+                        let r = new vscode.Range(new vscode.Position(0, 0),
+                                                 new vscode.Position(doc.lineCount, 0));
+
+                        builder.replace(r, value);
+                    }
+
+                    completed(null, editor.document);
+                }
+                catch (e) {
+                    completed(e);
+                }
+            });
+        }
+        catch (e) {
+            completed(e);
+        }
+    });
+}
+
+/**
  * Sorts a list of commands.
  * 
  * @param {deploy_contracts.ScriptCommand[]} pkgs The input list.

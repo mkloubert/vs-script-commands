@@ -339,6 +339,62 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
+        const $asString = function(val: any, enc?: string): string {
+            if (sc_helpers.isNullOrUndefined(val)) {
+                return val;
+            }
+
+            enc = sc_helpers.normalizeString(enc);
+            if ('' === enc) {
+                enc = undefined;
+            }
+
+            if (Buffer.isBuffer(val)) {
+                return val.toString(enc);
+            }
+
+            if ('object' === typeof val) {
+                return JSON.stringify(val);
+            }
+
+            return sc_helpers.toStringSafe(val);
+        };
+        const $readFile = function(file: string): Promise<Buffer> {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
+            return new Promise<Buffer>((resolve, reject) => {
+                FS.readFile(file, (err, data) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(data);
+                    }
+                });
+            });
+        };
+        const $readString = function(file: string, enc = 'utf8'): Promise<string> {
+            enc = sc_helpers.normalizeString(enc);
+            if ('' === enc) {
+                enc = 'utf8';
+            }
+
+            return new Promise<any>((resolve, reject) => {
+                $readFile(file).then((data) => {
+                    try {
+                        resolve( data.toString(enc) );
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $hash = function(algo: string, dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
             return new Promise<string | Buffer>((resolve, reject) => {
                 try {
@@ -438,33 +494,40 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
-        const $appendFile = function(file: string, data: any): void {
+        const $appendFile = function(file: string, valueOrResult: any): Promise<any> {
             file = sc_helpers.toStringSafe(file);
             if (!Path.isAbsolute(file)) {
                 file = Path.join(_currentDir, file);
             }
 
-            FS.appendFileSync(file, data);
-        };
-        const $asString = function(val: any, enc?: string): string {
-            if (sc_helpers.isNullOrUndefined(val)) {
-                return val;
-            }
+            return new Promise<any>((resolve, reject) => {
+                $unwrap(valueOrResult).then((data) => {
+                    try {
+                        if (!Buffer.isBuffer(data)) {
+                            if ('object' === typeof data) {
+                                data = new Buffer( JSON.stringify(data), 'utf8' );
+                            }
+                            else {
+                                data = new Buffer( sc_helpers.toStringSafe(data), 'utf8')
+                            }
+                        }
 
-            enc = sc_helpers.normalizeString(enc);
-            if ('' === enc) {
-                enc = undefined;
-            }
-
-            if (Buffer.isBuffer(val)) {
-                return val.toString(enc);
-            }
-
-            if ('object' === typeof val) {
-                return JSON.stringify(val);
-            }
-
-            return sc_helpers.toStringSafe(val);
+                        FS.appendFile(file, data, (err) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                resolve();
+                            }
+                        });
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
 
         let _currentDir = _permanentCurrentDirectory;
@@ -1109,40 +1172,33 @@ function _executeExpression(_expr: string) {
 
             return str;
         };
-        const $readFile = function(file: string): Buffer {
-            file = sc_helpers.toStringSafe(file);
-            if (!Path.isAbsolute(file)) {
-                file = Path.join(_currentDir, file);
-            }
-
-            return FS.readFileSync(file);
-        };
-        const $readJSON = function(file: string, enc = 'utf8'): any {
-            file = sc_helpers.toStringSafe(file);
-            if (!Path.isAbsolute(file)) {
-                file = Path.join(_currentDir, file);
-            }
-
+        
+        const $readJSON = function(file: string, enc = 'utf8'): Promise<any> {
             enc = sc_helpers.normalizeString(enc);
             if ('' === enc) {
                 enc = 'utf8';
             }
 
-            return JSON.parse( FS.readFileSync(file).toString(enc) );
-        };
-        const $readString = function(file: string, enc = 'utf8'): string {
-            file = sc_helpers.toStringSafe(file);
-            if (!Path.isAbsolute(file)) {
-                file = Path.join(_currentDir, file);
-            }
+            return new Promise<any>((resolve, reject) => {
+                $readString(file).then((json) => {
+                    try {
+                        let obj: any;
 
-            enc = sc_helpers.normalizeString(enc);
-            if ('' === enc) {
-                enc = 'utf8';
-            }
+                        if (json.length > 0) {
+                            obj = JSON.parse(json);
+                        }
+                        
+                        resolve(obj);
+                    }
+                    catch (e) {
 
-            return FS.readFileSync(file).toString(enc);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
+        
         const $receiveFrom = function(port: number, type?: string): Promise<Buffer> {
             port = parseInt( sc_helpers.toStringSafe(port).trim() );
 
@@ -1612,13 +1668,40 @@ function _executeExpression(_expr: string) {
             return wf.start($state);
         };
         const $workspace = vscode.workspace.rootPath;
-        const $writeFile = function(file: string, data: any): void {
+        const $writeFile = function(file: string, valueOrResult: any): Promise<any> {
             file = sc_helpers.toStringSafe(file);
             if (!Path.isAbsolute(file)) {
                 file = Path.join(_currentDir, file);
             }
 
-            FS.writeFileSync(file, data);
+            return new Promise<any>((resolve, reject) => {
+                $unwrap(valueOrResult).then((data) => {
+                    try {
+                        if (!Buffer.isBuffer(data)) {
+                            if ('object' === typeof data) {
+                                data = new Buffer( JSON.stringify(data), 'utf8' );
+                            }
+                            else {
+                                data = new Buffer( sc_helpers.toStringSafe(data), 'utf8')
+                            }
+                        }
+
+                        FS.writeFile(file, data, (err) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                resolve();
+                            }
+                        });
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $xmlDecode = function(str: string): string {
             str = sc_helpers.toStringSafe(str);
@@ -1791,7 +1874,7 @@ function _generateHelpHTML(): string {
     markdown += "| ---- | --------- |\n";
     markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
-    markdown += "| `$appendFile(path: string, data: any): void` | Appends data to a file. |\n";
+    markdown += "| `$appendFile(path: string, valueOrResult: any): Promise<any>` | Appends data to a file. |\n";
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$baseDecode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
     markdown += "| `$baseEncode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
@@ -1843,9 +1926,9 @@ function _generateHelpHTML(): string {
     markdown += "| `$PUT(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
     markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
     markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
-    markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
-    markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
-    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
+    markdown += "| `$readFile(path: string): Promise<Buffer>` | Reads the data of a file. |\n";
+    markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): Promise<any>` | Reads a JSON file and returns the its object / value. |\n";
+    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): Promise<string>` | Reads a file as string. |\n";
     markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
     markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
@@ -1874,7 +1957,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$upper(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to upper case. |\n";
     markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
-    markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
+    markdown += "| `$writeFile(path: string, valueOrResult: any): Promise<any>` | Writes data to a file. |\n";
     markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
     markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
     markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";

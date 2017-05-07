@@ -47,6 +47,7 @@ import * as URL from 'url';
 import * as UUID from 'uuid';
 import * as vscode from 'vscode';
 import * as Workflows from 'node-workflows';
+import * as ZLib from 'zlib';
 
 
 /**
@@ -416,6 +417,10 @@ function _executeExpression(_expr: string) {
                 return val.toString(enc);
             }
 
+            if ('object' === typeof val) {
+                return JSON.stringify(val);
+            }
+
             return sc_helpers.toStringSafe(val);
         };
 
@@ -612,6 +617,31 @@ function _executeExpression(_expr: string) {
         const $globals = $me.getGlobals();
         const $guid = function(v4 = true) {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
+        };
+        const $gunzip = function(val: Buffer | string): Buffer {
+            if (sc_helpers.isNullOrUndefined(val)) {
+                val = Buffer.alloc(0);
+            }
+
+            if (!Buffer.isBuffer(val)) {
+                val = new Buffer(sc_helpers.toStringSafe(val).trim(), 'base64');
+            }
+
+            return ZLib.gunzipSync(val);
+        };
+        const $gzip = function(val: any, base64 = false): Buffer | string {
+            if (sc_helpers.isNullOrUndefined(val)) {
+                val = Buffer.alloc(0);
+            }
+
+            if (!Buffer.isBuffer(val)) {
+                val = new Buffer( $asString(val) );
+            }
+
+            let gzipped = ZLib.gzipSync(val);
+
+            return sc_helpers.toBooleanSafe(base64) ? gzipped.toString('base64')
+                                                    : gzipped;
         };
         const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash(algo, data, asBuffer);
@@ -1590,6 +1620,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
     markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
+    markdown += "| `$gunzip(bufferOrBase64String: any): Buffer` | UNcompresses data with GZIP. |\n";
+    markdown += "| `$gzip(val: any, base64: boolean = false): Buffer` | Compresses data with GZIP. |\n";
     markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
     markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";

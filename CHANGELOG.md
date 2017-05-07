@@ -2,7 +2,7 @@
 
 ## 4.15.0 (?????? ????, ????; functions and variables)
 
-* `$download` function for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$download` and `$select` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 
 ## 4.14.0 (May 7th, 2017; functions and variables)
 

@@ -1046,6 +1046,24 @@ function _executeExpression(_expr: string) {
             return $sendTo(new Buffer(json, 'utf8'), 
                            port, addr, type);
         };
+        const $select = function(valueOrResult: any, selector: (val: any) => any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                Promise.resolve(valueOrResult).then((val) => {
+                    try {
+                        if (selector) {
+                            val = selector(val);
+                        }
+                        
+                        resolve(val);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $setState = function(val: any): any {
             return $state = val;
         };
@@ -1372,7 +1390,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
     markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
-    markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
+    markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
     markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
     markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
@@ -1395,6 +1413,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
     markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
+    markdown += "| `$select(valueOrResult: any, selector: Function): Promise<any>` | Projects a value to a new one by using a selector function. |\n";
     markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
     markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";

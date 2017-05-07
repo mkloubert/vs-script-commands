@@ -2,7 +2,7 @@
 
 ## 4.15.0 (?????? ????, ????; functions and variables)
 
-* `$download`, `$openInEditor`, `$select`, `$unwrap` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* `$clone`, `$download`, `$openInEditor`, `$select`, `$shuffle`, `$unwrap` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * function that do HTTP requests can load headers from files now
 * `$setState` function can also handle async (Promise based) results now
 

@@ -307,6 +307,29 @@ function _executeExpression(_expr: string) {
                 unwrapNext(valueOrResult, 0);
             });
         };
+        const $clone = function(valueOrResult: any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                $unwrap(valueOrResult).then((value) => {
+                    try {
+                        let clonedValue: any;
+
+                        if (Buffer.isBuffer(value)) {
+                            clonedValue = Buffer.concat([ value ]);
+                        }
+                        else {
+                            clonedValue = sc_helpers.cloneObject(value);
+                        }
+
+                        resolve( clonedValue );
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $ = function(...args: any[]): Promise<any[]> {
             return new Promise<any>((resolve, reject) => {
                 let wf = Workflows.create();
@@ -1167,6 +1190,59 @@ function _executeExpression(_expr: string) {
 
             return _showResultInTab;
         };
+        const $shuffle = function(valueOrResult: any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                $unwrap(valueOrResult).then((val) => {
+                    try {
+                        let arr: any;
+            
+                        let getValue: (index: number) => any = (i) => arr[i];
+                        let setValue: (index: number, v: any) => void = (i, v) => arr[i] = v;
+                        let getLength: () => number = () => arr.length;
+
+                        if (!sc_helpers.isNullOrUndefined(val)) {
+                            if (Buffer.isBuffer(val)) {
+                                arr = val;
+
+                                getValue = (i) => val.readUInt8(i);
+                                setValue = (i, v) => val.writeUInt8(v, i);
+                            }
+                            else if (Array.isArray(val)) {
+                                arr = val;
+                            }
+                            else {
+                                arr = sc_helpers.toStringSafe(val);
+
+                                setValue = (i, v) => {
+                                    v = sc_helpers.toStringSafe(v);
+
+                                    arr = arr.substr(0, i) + 
+                                          v + 
+                                          arr.substr(i + v.length);
+                                };
+                            }
+                        }
+
+                        if (!sc_helpers.isNullOrUndefined(arr)) {
+                            for (let i = 0; i < getLength(); i++) {
+                                let newIndex = RandomInt(0, getLength() - 1);
+
+                                let temp = getValue(i);
+                                setValue(i, getValue(newIndex));
+                                setValue(newIndex, temp);
+                            }
+                        }
+
+                        resolve(arr);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
         const $startApi = function(): Promise<any> {
             return new Promise<any>((resolve, reject) => {
                 try {
@@ -1483,6 +1559,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
     markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
     markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
+    markdown += "| `$clone(valueOrResult: any): Promise<any>` | Clones a value or result. |\n";
     markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
     markdown += "| `$DELETE(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
     markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
@@ -1541,6 +1618,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
     markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
     markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
+    markdown += "| `$shuffle(valueOrResult: any): Promise<any>` | Shuffles data. |\n";
     markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
     markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";

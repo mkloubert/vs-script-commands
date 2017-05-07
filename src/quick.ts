@@ -1684,6 +1684,7 @@ export function reset() {
     _prevVal = undefined;
     _state = undefined;
     _udpServers = [];
+    _udpServerActions = [];
     _values = [];
 
     if (cfg.quick) {

@@ -4,6 +4,7 @@
 
 * `$addValue`, `$DELETE`, `$GET`, `$HEAD`, `$htmlDecode`, `$openInTab`, `$OPTIONS`, `$PATCH`, `$POST`, `$PUT`, `$readJSONFrom`, `$REQUEST`, `$sendJSONTo`, `$workflow`, `$xmlDecode`, `$htmlEncode` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * `$openHtml` can handle async Promise results now
+* bugfixes
 
 ## 4.13.0 (May 6th, 2017; functions and variables)
 

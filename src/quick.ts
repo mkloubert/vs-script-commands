@@ -710,6 +710,12 @@ function _executeExpression(_expr: string) {
         const $log = function(msg: any) {
             $me.log(msg);
         };
+        const $lower = function(val: any, locale = false): string {
+            val = sc_helpers.toStringSafe(val);
+
+            return sc_helpers.toBooleanSafe(locale) ? val.toLocaleLowerCase()
+                                                    : val.toLowerCase();
+        };
         const $lstat = function(path: string): FS.Stats {
             path = sc_helpers.toStringSafe(path);
             if (!Path.isAbsolute(path)) {
@@ -1320,6 +1326,9 @@ function _executeExpression(_expr: string) {
         const $toHexView = function(val: any): string {
             return Hexy.hexy(val);
         };
+        const $trim = function(val: any): string {
+            return sc_helpers.toStringSafe(val).trim();
+        };
         const $unlink = function(path: string): void {
             path = sc_helpers.toStringSafe(path);
             if (!Path.isAbsolute(path)) {
@@ -1334,6 +1343,12 @@ function _executeExpression(_expr: string) {
             else {
                 FS.unlinkSync(path);
             }
+        };
+        const $upper = function(val: any, locale = false): string {
+            val = sc_helpers.toStringSafe(val);
+
+            return sc_helpers.toBooleanSafe(locale) ? val.toLocaleUpperCase()
+                                                    : val.toUpperCase();
         };
         const $uuid = function(v4 = true): string {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
@@ -1584,6 +1599,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
     markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
     markdown += "| `$log(msg: any): void` | Logs a message. |\n";
+    markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
     markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
     markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
     markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
@@ -1625,8 +1641,10 @@ function _generateHelpHTML(): string {
     markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
     markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
+    markdown += "| `$trim(val: any): string` | Removes the whitespaces from a value. |\n";
     markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
     markdown += "| `$unwrap(valueOrResult: any, maxDepth: number = 64): Promise<any>` | Unwraps a value or result. |\n";
+    markdown += "| `$upper(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to upper case. |\n";
     markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";

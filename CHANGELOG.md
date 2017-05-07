@@ -2,7 +2,7 @@
 
 ## 4.15.0 (?????? ????, ????; functions and variables)
 
-* added `$clone`, `$download`, `$gunzip`, `$gzip`, `$lower`, `$openInEditor`, `$select`, `$shuffle`, `$trim`, `$unwrap` and `$upper` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
+* added `$clone`, `$download`, `$gunzip`, `$gzip`, `$lower`, `$max`, `$min`, `$openInEditor`, `$select`, `$shuffle`, `$trim`, `$unwrap` and `$upper` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * functions, that do HTTP requests, can load headers from files now
 * `$setState` function can also handle async (Promise based) results now
 * `$asString` serializes general objects to JSON now

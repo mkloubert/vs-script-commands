@@ -754,6 +754,41 @@ function _executeExpression(_expr: string) {
 
             return FS.lstatSync(path);
         };
+        const $max = function(...args: any[]): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                let wf = Workflows.create();
+
+                if (args) {
+                    args.forEach((a, i) => {
+                        wf.next((wfCtx) => {
+                            return new Promise<any>((res, rej) => {
+                                $unwrap(a).then((val) => {
+                                    if (wfCtx.index > 0) {
+                                        if (val > wfCtx.result) {
+                                            wfCtx.result = val;
+                                        }
+                                    }
+                                    else {
+                                        wfCtx.result = val;
+                                    }
+
+                                    res();
+                                }).catch((err) => {
+                                    rej(err);
+                                });
+                            });
+                        });
+                    });
+                }
+
+                wf.start().then((maxValue) => {
+                    resolve(maxValue);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        };
+        let $maxDepth = 64;
         const $mkdir = function(dir: string): void {
             dir = sc_helpers.toStringSafe(dir);
             if (!Path.isAbsolute(dir)) {
@@ -762,9 +797,42 @@ function _executeExpression(_expr: string) {
 
             FSExtra.mkdirsSync(dir);
         };
-        let $maxDepth = 64;
         const $md5 = function(data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash('md5', data, asBuffer);
+        };
+        const $min = function(...args: any[]): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                let wf = Workflows.create();
+
+                if (args) {
+                    args.forEach((a, i) => {
+                        wf.next((wfCtx) => {
+                            return new Promise<any>((res, rej) => {
+                                $unwrap(a).then((val) => {
+                                    if (wfCtx.index > 0) {
+                                        if (val < wfCtx.result) {
+                                            wfCtx.result = val;
+                                        }
+                                    }
+                                    else {
+                                        wfCtx.result = val;
+                                    }
+
+                                    res();
+                                }).catch((err) => {
+                                    rej(err);
+                                });
+                            });
+                        });
+                    });
+                }
+
+                wf.start().then((minValue) => {
+                    resolve(minValue);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $noResultInfo = function(flag?: boolean, permanent = false): boolean {
             if (arguments.length > 0) {

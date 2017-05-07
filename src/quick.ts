@@ -239,7 +239,7 @@ function _executeExpression(_expr: string) {
                 // and activated
                 // -OR- $doNotShowResult
 
-                if (_showResultInTab) {
+                if (_showResultInTab || Buffer.isBuffer(result)) {
                     // show in tab
 
                     $me.openHtml(_generateHTMLForResult(_expr, result, _disableHexView), '[vs-script-commands] Quick execution result').then(() => {

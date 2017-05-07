@@ -260,6 +260,53 @@ function _executeExpression(_expr: string) {
 
     try {
         let $args: any[];
+        const $unwrap = function(valueOrResult: any, maxDepth = 64): Promise<any> {
+            maxDepth = parseInt( sc_helpers.toStringSafe(maxDepth).trim() );
+
+            return new Promise<any>((resolve, reject) => {
+                let completed = (err: any, v?: any) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(v);
+                    }
+                };
+                
+                let unwrapNext: (val: any, level: number) => void;
+                unwrapNext = (val, level) => {
+                    try {
+                        if (!isNaN(maxDepth) && (level >= maxDepth)) {
+                            // maximum reached
+
+                            completed(null, val);
+                        }
+                        else {
+                            Promise.resolve( val ).then((v) => {
+                                try {
+                                    if ('function' === typeof v) {
+                                        unwrapNext( v(), level + 1 );
+                                    }
+                                    else {
+                                        completed(null, v);
+                                    }
+                                }
+                                catch (e) {
+                                    completed(e);
+                                }
+                            }).catch((err) => {
+                                completed(err);
+                            });
+                        }
+                    }
+                    catch (e) {
+                        completed(e);
+                    }
+                };
+
+                unwrapNext(valueOrResult, 0);
+            });
+        };
         const $ = function(...args: any[]): Promise<any[]> {
             return new Promise<any>((resolve, reject) => {
                 let wf = Workflows.create();
@@ -1398,48 +1445,10 @@ function _executeExpression(_expr: string) {
         };
 
         // execute expression ...
-        Promise.resolve( eval(_expr) ).then((result: any) => {
-            try {
-                let executeWhile: (r: any, level: number) => void;
-                executeWhile = (r, level) => {
-                    level = parseInt(sc_helpers.toStringSafe(level).trim());
-
-                    // check if maximum reached
-                    let md = parseInt(sc_helpers.toStringSafe($maxDepth).trim());
-                    if (!isNaN(md) && level >= md) {
-                        _completed(null, r);  // yes
-                        return;
-                    }
-
-                    if ('function' === typeof r) {
-                        let rRes = r.apply($thisArgs,
-                                           sc_helpers.toArray( $args ));
-
-                        Promise.resolve( rRes ).then((result2) => {
-                            try {
-                                executeWhile(result2, level + 1);
-                            }
-                            catch (e) {
-                                _completed(e);
-                            }
-                        }).catch((err) => {
-                            _completed(err);
-                        });
-                    }
-                    else {
-                        _completed(null, r);
-                    }
-                };
-
-                // execute while a result
-                // is a function
-                executeWhile(result, $level);
-            }
-            catch (e) {
-                _completed(e);
-            }
-        }).catch((e) => {
-            _completed(e);
+        $unwrap( eval(_expr), $maxDepth ).then((result) => {
+            _completed(null, result);
+        }).catch((err) => {
+            _completed(err);
         });
     }
     catch (e) {
@@ -1539,6 +1548,7 @@ function _generateHelpHTML(): string {
     markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
     markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
     markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
+    markdown += "| `$unwrap(valueOrResult: any, maxDepth: number = 64): Promise<any>` | Unwraps a value or result. |\n";
     markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
     markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
     markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";

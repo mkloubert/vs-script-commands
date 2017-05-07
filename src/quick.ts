@@ -664,30 +664,66 @@ function _executeExpression(_expr: string) {
         const $guid = function(v4 = true) {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
         };
-        const $gunzip = function(val: Buffer | string): Buffer {
-            if (sc_helpers.isNullOrUndefined(val)) {
-                val = Buffer.alloc(0);
-            }
+        const $gunzip = function(valueOrResult: Buffer | string): Promise<Buffer> {
+            return new Promise<Buffer>((resolve, reject) => {
+                $unwrap(valueOrResult).then((val) => {
+                    try {
+                        if (sc_helpers.isNullOrUndefined(val)) {
+                            val = Buffer.alloc(0);
+                        }
 
-            if (!Buffer.isBuffer(val)) {
-                val = new Buffer(sc_helpers.toStringSafe(val).trim(), 'base64');
-            }
+                        if (!Buffer.isBuffer(val)) {
+                            val = new Buffer(sc_helpers.toStringSafe(val).trim(), 'base64');
+                        }
 
-            return ZLib.gunzipSync(val);
+                        ZLib.gunzip(val, (err, uncompressedData) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                resolve(uncompressedData);
+                            }
+                        });
+                    }
+                    catch (e) {
+                        reject(e);    
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
-        const $gzip = function(val: any, base64 = false): Buffer | string {
-            if (sc_helpers.isNullOrUndefined(val)) {
-                val = Buffer.alloc(0);
-            }
+        const $gzip = function(valueOrResult: any, base64 = false): Promise<Buffer | string> {
+            base64 = sc_helpers.toBooleanSafe(base64);
+            
+            return new Promise<Buffer | string>((resolve, reject) => {
+                $unwrap(valueOrResult).then((val) => {
+                    try {
+                        if (sc_helpers.isNullOrUndefined(val)) {
+                            val = Buffer.alloc(0);
+                        }
 
-            if (!Buffer.isBuffer(val)) {
-                val = new Buffer( $asString(val) );
-            }
+                        if (!Buffer.isBuffer(val)) {
+                            val = new Buffer( $asString(val) );
+                        }
 
-            let gzipped = ZLib.gzipSync(val);
-
-            return sc_helpers.toBooleanSafe(base64) ? gzipped.toString('base64')
-                                                    : gzipped;
+                        ZLib.gzip(val, (err, compressedData) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                resolve(base64 ? compressedData.toString('base64')
+                                               : compressedData);
+                            }
+                        });
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
         };
         const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
             return sc_helpers.hash(algo, data, asBuffer);
@@ -1736,8 +1772,8 @@ function _generateHelpHTML(): string {
     markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
     markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
     markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
-    markdown += "| `$gunzip(bufferOrBase64String: any): Buffer` | UNcompresses data with GZIP. |\n";
-    markdown += "| `$gzip(val: any, base64: boolean = false): Buffer` | Compresses data with GZIP. |\n";
+    markdown += "| `$gunzip(bufferOrBase64StringAsValueOrResult: any): Buffer` | UNcompresses data with GZIP. |\n";
+    markdown += "| `$gzip(valueOrResult: any, base64: boolean = false): Promise<any>` | Compresses data with GZIP. |\n";
     markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
     markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
     markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";

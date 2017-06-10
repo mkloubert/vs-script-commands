@@ -316,6 +316,7 @@ function _executeExpression(_expr: string) {
                 unwrapNext(valueOrResult, 0);
             });
         };
+
         const $clone = function(valueOrResult: any): Promise<any> {
             return new Promise<any>((resolve, reject) => {
                 $unwrap(valueOrResult).then((value) => {
@@ -406,38 +407,40 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $hash = function(algo: string, dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
-            return new Promise<string | Buffer>((resolve, reject) => {
-                try {
-                    $unwrap(dataOrResult).then((data) => {
-                        try {
-                            let hash: string | Buffer;
+        const $hash = function(...args: any[]): Promise<string | Buffer> {
+            return _forNoPromises(args, (algo: string, dataOrResult: any, asBuffer = false) => {
+                return new Promise<string | Buffer>((resolve, reject) => {
+                    try {
+                        $unwrap(dataOrResult).then((data) => {
+                            try {
+                                let hash: string | Buffer;
 
-                            if (!sc_helpers.isNullOrUndefined(data)) {
-                                if (!Buffer.isBuffer(data)) {
-                                    if ('object' === typeof data) {
-                                        data = JSON.stringify(data);
+                                if (!sc_helpers.isNullOrUndefined(data)) {
+                                    if (!Buffer.isBuffer(data)) {
+                                        if ('object' === typeof data) {
+                                            data = JSON.stringify(data);
+                                        }
+                                        else {
+                                            data = sc_helpers.toStringSafe(data);
+                                        }
                                     }
-                                    else {
-                                        data = sc_helpers.toStringSafe(data);
-                                    }
+
+                                    hash = sc_helpers.hash(algo, data, asBuffer);
                                 }
 
-                                hash = sc_helpers.hash(algo, data, asBuffer);
+                                resolve(hash);
                             }
-
-                            resolve(hash);
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    }).catch((err) => {
-                        reject(err);
-                    });
-                }
-                catch (e) {
-                    reject(e);
-                }
+                            catch (e) {
+                                reject(e);
+                            }
+                        }).catch((err) => {
+                            reject(err);
+                        });
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                });
             });
         };
 
@@ -484,25 +487,11 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $addValue = function(valueOrResult: any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                try {
-                    Promise.resolve( valueOrResult ).then((result) => {
-                        try {
-                            $values.push(result);
+        const $addValue = function(...args: any[]): Promise<any> {
+            return _forNoPromises(args, (result: any) => {
+                $values.push(result);
 
-                            resolve(result);
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    }).catch((err) => {
-                        reject(err);
-                    });
-                }
-                catch (e) {
-                    reject(e);
-                }
+                return result;
             });
         };
         const $appendFile = function(file: string, valueOrResult: any): Promise<any> {
@@ -637,24 +626,26 @@ function _executeExpression(_expr: string) {
         const $clearValues = function(): void {
             _values = [];
         };
-        const $cwd = function(newPath?: string, permanent = false) {
-            if (arguments.length > 0) {
-                newPath = sc_helpers.toStringSafe(arguments[0]);
-                if (sc_helpers.isEmptyString(newPath)) {
-                    newPath = vscode.workspace.rootPath;
-                }
-                if (!Path.isAbsolute(newPath)) {
-                    newPath = Path.join(_currentDir, newPath);
-                }
-                newPath = Path.resolve(newPath);
+        const $cwd = function(...args: any[]) {
+            return _forNoPromises(args, (newPath?: string, permanent = false) => {
+                if (args.length > 0) {
+                    newPath = sc_helpers.toStringSafe(args[0]);
+                    if (sc_helpers.isEmptyString(newPath)) {
+                        newPath = vscode.workspace.rootPath;
+                    }
+                    if (!Path.isAbsolute(newPath)) {
+                        newPath = Path.join(_currentDir, newPath);
+                    }
+                    newPath = Path.resolve(newPath);
 
-                _currentDir = newPath;
-                if (sc_helpers.toBooleanSafe(permanent)) {
-                    _permanentCurrentDirectory = newPath;
+                    _currentDir = newPath;
+                    if (sc_helpers.toBooleanSafe(permanent)) {
+                        _permanentCurrentDirectory = newPath;
+                    }
                 }
-            }
 
-            return _currentDir;
+                return _currentDir;
+            });
         };
 
         const $DELETE = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
@@ -1881,7 +1872,9 @@ function _executeExpression(_expr: string) {
         };
 
         const $eval = function(): any {
-            return eval( sc_helpers.toStringSafe(arguments[0]) );
+            return _forNoPromises(arguments, (c: any) => {
+                return eval( sc_helpers.toStringSafe(c) );
+            });
         };
 
         // execute expression ...
@@ -1894,6 +1887,74 @@ function _executeExpression(_expr: string) {
     catch (e) {
         _completed(e);
     }
+}
+
+function _forNoPromises(args: ArrayLike<any>, func?: Function, thisArgs?: any): Promise<any> {
+    if (sc_helpers.isNullOrUndefined(args)) {
+        args = [];
+    }
+
+    return new Promise<any[]>((resolve, reject) => {
+        try {
+            let wf = Workflows.create();
+
+            wf.next((ctx) => {
+                ctx.result = [];
+            });
+
+            let addAction = (a: any) => {
+                wf.next((ctx) => {
+                    let realValues: any[] = ctx.result;
+
+                    return new Promise<any>((res, rej) => {
+                        try {
+                            Promise.resolve( a ).then((realValue) => {
+                                try {
+                                    realValues.push(realValue);
+                                    
+                                    res();
+                                }
+                                catch (e) {
+                                    rej(e);
+                                }
+                            }).catch((err) => {
+                                rej(err);
+                            });
+                        }
+                        catch (e) {
+                            rej(e);
+                        }
+                    });
+                });
+            };
+
+            for (let i = 0; i < args.length; i++) {
+                addAction(args[i]);
+            }
+
+            wf.start().then((realValues: any[]) => {
+                try {
+                    let result: any;
+                    if (func) {
+                        result = func.apply(thisArgs, realValues);
+                    }
+                    else {
+                        result = realValues;
+                    }
+
+                    resolve(result);
+                }
+                catch (e) {
+                    reject(e);
+                }
+            }).catch((err) => {
+                reject(err);
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
 }
 
 function _fromMarkdown(markdown: any): string {
@@ -1917,95 +1978,95 @@ function _generateHelpHTML(): string {
     markdown += "## Functions\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
-    markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
+    // markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
-    markdown += "| `$appendFile(path: string, valueOrResult: any): Promise<any>` | Appends data to a file. |\n";
-    markdown += "| `$asString(val: any): Promise<string>` | Returns a value as string. |\n";
-    markdown += "| `$baseDecode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
-    markdown += "| `$baseEncode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
-    markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
-    markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
-    markdown += "| `$clone(valueOrResult: any): Promise<any>` | Clones a value or result. |\n";
-    markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
-    markdown += "| `$DELETE(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
-    markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
-    markdown += "| `$download(url: string, targetFile?: string): Promise<Buffer>` | Downloads data from an URL. |\n";
+    // markdown += "| `$appendFile(path: string, valueOrResult: any): Promise<any>` | Appends data to a file. |\n";
+    // markdown += "| `$asString(val: any): Promise<string>` | Returns a value as string. |\n";
+    // markdown += "| `$baseDecode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
+    // markdown += "| `$baseEncode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
+    // markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
+    // markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
+    // markdown += "| `$clone(valueOrResult: any): Promise<any>` | Clones a value or result. |\n";
+    markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): Promise<string>` | Gets or sets the current working directory for the execution. |\n";
+    // markdown += "| `$DELETE(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
+    // markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
+    // markdown += "| `$download(url: string, targetFile?: string): Promise<Buffer>` | Downloads data from an URL. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
-    markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
-    markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
-    markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
-    markdown += "| `$executeForState(result: any): Promise<any>` | Executes an action and writes it to the `$state` variable. |\n";
-    markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
-    markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
-    markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
-    markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
-    markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
-    markdown += "| `$gunzip(bufferOrBase64StringAsValueOrResult: any): Buffer` | UNcompresses data with GZIP. |\n";
-    markdown += "| `$gzip(valueOrResult: any, base64: boolean = false): Promise<any>` | Compresses data with GZIP. |\n";
+    // markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
+    // markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
+    // markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
+    // markdown += "| `$executeForState(result: any): Promise<any>` | Executes an action and writes it to the `$state` variable. |\n";
+    // markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
+    // markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
+    // markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
+    // markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
+    // markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    // markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
+    // markdown += "| `$gunzip(bufferOrBase64StringAsValueOrResult: any): Buffer` | UNcompresses data with GZIP. |\n";
+    // markdown += "| `$gzip(valueOrResult: any, base64: boolean = false): Promise<any>` | Compresses data with GZIP. |\n";
     markdown += "| `$hash(algorithm: string, dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data. |\n";
-    markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
-    markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
-    markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
-    markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
-    markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
-    markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
-    markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
-    markdown += "| `$log(msg: any): void` | Logs a message. |\n";
-    markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
-    markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
-    markdown += "| `$max(...valuesOrResults: any[]): Promise<any>` | Returns the maximum value from a list of values. |\n";
+    // markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
+    // markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
+    // markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
+    // markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
+    // markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
+    // markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
+    // markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
+    // markdown += "| `$log(msg: any): void` | Logs a message. |\n";
+    // markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
+    // markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
+    // markdown += "| `$max(...valuesOrResults: any[]): Promise<any>` | Returns the maximum value from a list of values. |\n";
     markdown += "| `$md5(dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data by MD5. |\n";
-    markdown += "| `$min(...valuesOrResults: any[]): Promise<any>` | Returns the minimum value from a list of values. |\n";
-    markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
-    markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
-    markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
-    markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
-    markdown += "| `$openInEditor(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new text editor by using an optional selector function for result to show. |\n";
-    markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
-    markdown += "| `$OPTIONS(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
-    markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
-    markdown += "| `$PATCH(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PATCH request. |\n";
-    markdown += "| `$POST(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP POST request. |\n";
-    markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
-    markdown += "| `$PUT(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
-    markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
-    markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
-    markdown += "| `$readFile(path: string): Promise<Buffer>` | Reads the data of a file. |\n";
-    markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): Promise<any>` | Reads a JSON file and returns the its object / value. |\n";
-    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): Promise<string>` | Reads a file as string. |\n";
-    markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
-    markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
-    markdown += "| `$REQUEST(method: string, url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP request. |\n";
-    markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
-    markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
-    markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
-    markdown += "| `$select(valueOrResult: any, selector: Function): Promise<any>` | Projects a value to a new one by using a selector function. |\n";
-    markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    markdown += "| `$setState(valueOrResult: any, selector?: Function): Promise<any>): Promise<any>` | Sets the value of `$state` variable by using an optional value selector and returns the new value. |\n";
+    // markdown += "| `$min(...valuesOrResults: any[]): Promise<any>` | Returns the minimum value from a list of values. |\n";
+    // markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
+    // markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
+    // markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
+    // markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    // markdown += "| `$openInEditor(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new text editor by using an optional selector function for result to show. |\n";
+    // markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
+    // markdown += "| `$OPTIONS(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
+    // markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
+    // markdown += "| `$PATCH(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PATCH request. |\n";
+    // markdown += "| `$POST(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP POST request. |\n";
+    // markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
+    // markdown += "| `$PUT(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
+    // markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
+    // markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
+    // markdown += "| `$readFile(path: string): Promise<Buffer>` | Reads the data of a file. |\n";
+    // markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): Promise<any>` | Reads a JSON file and returns the its object / value. |\n";
+    // markdown += "| `$readString(file: string, encoding?: string = 'utf8'): Promise<string>` | Reads a file as string. |\n";
+    // markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    // markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
+    // markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
+    // markdown += "| `$REQUEST(method: string, url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP request. |\n";
+    // markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
+    // markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    // markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
+    // markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
+    // markdown += "| `$select(valueOrResult: any, selector: Function): Promise<any>` | Projects a value to a new one by using a selector function. |\n";
+    // markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    // markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    // markdown += "| `$setState(valueOrResult: any, selector?: Function): Promise<any>): Promise<any>` | Sets the value of `$state` variable by using an optional value selector and returns the new value. |\n";
     markdown += "| `$sha1(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-1. |\n";
     markdown += "| `$sha256(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-256. |\n";
-    markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
-    markdown += "| `$shuffle(valueOrResult: any): Promise<any>` | Shuffles data. |\n";
-    markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
-    markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
-    markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
-    markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
-    markdown += "| `$trim(val: any): string` | Removes the whitespaces from a value. |\n";
-    markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
-    markdown += "| `$unwrap(valueOrResult: any, maxDepth: number = 64): Promise<any>` | Unwraps a value or result. |\n";
-    markdown += "| `$upper(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to upper case. |\n";
-    markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
-    markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
-    markdown += "| `$writeFile(path: string, valueOrResult: any): Promise<any>` | Writes data to a file. |\n";
-    markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
-    markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
-    markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";
+    // markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
+    // markdown += "| `$shuffle(valueOrResult: any): Promise<any>` | Shuffles data. |\n";
+    // markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
+    // markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    // markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
+    // markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    // markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
+    // markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
+    // markdown += "| `$trim(val: any): string` | Removes the whitespaces from a value. |\n";
+    // markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
+    // markdown += "| `$unwrap(valueOrResult: any, maxDepth: number = 64): Promise<any>` | Unwraps a value or result. |\n";
+    // markdown += "| `$upper(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to upper case. |\n";
+    // markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
+    // markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
+    // markdown += "| `$writeFile(path: string, valueOrResult: any): Promise<any>` | Writes data to a file. |\n";
+    // markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
+    // markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
+    // markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";
     markdown += "\n";
 
     markdown += "\n";
@@ -2013,20 +2074,20 @@ function _generateHelpHTML(): string {
     markdown += "## Variables\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
-    markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
-    markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
-    markdown += "| `$events: NodeJS.EventEmitter` | Stores the underlying [event emitter](https://nodejs.org/api/events.html). |\n";
-    markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
-    markdown += "| `$globalEvents: NodeJS.EventEmitter` | Stores the global [event emitter](https://nodejs.org/api/events.html) that also can interact with all other things of that extension, like [commands](https://github.com/mkloubert/vs-script-commands#commands-). |\n";
-    markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
-    markdown += "| `$lastResult: any` | Stores the last result. |\n";
-    markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
-    markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
-    markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
-    markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
-    markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
+    // markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
+    // markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
+    // markdown += "| `$events: NodeJS.EventEmitter` | Stores the underlying [event emitter](https://nodejs.org/api/events.html). |\n";
+    // markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
+    // markdown += "| `$globalEvents: NodeJS.EventEmitter` | Stores the global [event emitter](https://nodejs.org/api/events.html) that also can interact with all other things of that extension, like [commands](https://github.com/mkloubert/vs-script-commands#commands-). |\n";
+    // markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
+    // markdown += "| `$lastResult: any` | Stores the last result. |\n";
+    // markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
+    // markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
+    // markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
+    // markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
+    // markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$values: any[]` | The list of permanent stored values. |\n";
-    markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
+    // markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
 
     let html = '';
@@ -2290,7 +2351,6 @@ function _toHistoryEntryEx(entry: HistoryEntry,
 
     return ewi;
 }
-
 
 /**
  * Does a "quick execution".

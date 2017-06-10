@@ -1,15 +1,12 @@
 # Change Log (vs-script-commands)
 
-## 4.15.0 (?????? ????, ????; functions and variables)
+## 5.0.0 (?????? ????, ????; functions and variables)
 
+* all [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-) can be executed completely asynchron now
 * added `$base64Decode`, `$base64Encode`, `$clone`, `$download`, `$gunzip`, `$gzip`, `$lower`, `$max`, `$min`, `$openInEditor`, `$select`, `$shuffle`, `$trim`, `$unwrap` and `$upper` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
 * functions, that do HTTP requests, can load headers from files now
-* `$setState` function can also handle async (Promise based) results now
 * `$asString` serializes general objects to JSON now
 * binary data is shown in tab automatically now
-* hash functions run async now
-* file functions run async now
-* `$asString` function runs async now
 
 ## 4.14.0 (May 7th, 2017; functions and variables)
 

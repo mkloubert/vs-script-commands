@@ -1,12 +1,7 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "script.commands": {
-        "quick": {
-            "state": {
-                "MK": "a",
-                "TM": "b"
-            }
-        }
+    "deploy":{
+        "runBuildTaskOnStartup": true
     },
 
     "files.exclude": {

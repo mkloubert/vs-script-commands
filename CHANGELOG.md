@@ -1,6 +1,6 @@
 # Change Log (vs-script-commands)
 
-## 5.0.1 (October 14th, 2017; multi root support)
+## 5.0.2 (October 14th, 2017; multi root support)
 
 * started to refactor to new, upcoming [Multi Root Workspace API](https://github.com/Microsoft/vscode/wiki/Extension-Authoring:-Adopting-Multi-Root-Workspace-APIs)
 

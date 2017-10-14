@@ -31,6 +31,7 @@ import * as sc_content from './content';
 import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
+import * as sc_workspace from './workspace';
 import * as vscode from 'vscode';
 
 
@@ -65,6 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     let controller = new sc_controller.ScriptCommandController(context, outputChannel, pkgFile);
+    sc_workspace.resetSelectedWorkspaceFolder();
 
     // execute script command
     let executeCmd = vscode.commands.registerCommand('extension.scriptCommands.execute', () => {

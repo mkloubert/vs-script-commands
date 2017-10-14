@@ -43,11 +43,11 @@ import * as sc_contracts from './contracts';
 import * as sc_controller from './controller';
 import * as sc_helpers from './helpers';
 import * as sc_resources from './resources';
+import * as sc_workspace from './workspace';
 import * as URL from 'url';
 import * as UUID from 'uuid';
 import * as vscode from 'vscode';
 import * as Workflows from 'node-workflows';
-import * as ZLib from 'zlib';
 
 
 /**
@@ -239,7 +239,7 @@ function _executeExpression(_expr: string) {
                 // and activated
                 // -OR- $doNotShowResult
 
-                if (_showResultInTab || Buffer.isBuffer(result)) {
+                if (_showResultInTab) {
                     // show in tab
 
                     $me.openHtml(_generateHTMLForResult(_expr, result, _disableHexView), '[vs-script-commands] Quick execution result').then(() => {
@@ -261,189 +261,6 @@ function _executeExpression(_expr: string) {
 
     try {
         let $args: any[];
-        let $maxDepth = 64;
-
-        const $unwrap = function(valueOrResult: any, maxDepth?: number): Promise<any> {
-            maxDepth = parseInt( sc_helpers.toStringSafe(maxDepth).trim() );
-            if (isNaN(maxDepth)) {
-                maxDepth = $maxDepth;
-            }
-            if (isNaN(maxDepth)) {
-                maxDepth = 64;
-            }
-
-            return new Promise<any>((resolve, reject) => {
-                let completed = (err: any, v?: any) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(v);
-                    }
-                };
-                
-                let unwrapNext: (val: any, level: number) => void;
-                unwrapNext = (val, level) => {
-                    try {
-                        if (!isNaN(maxDepth) && (level >= maxDepth)) {
-                            // maximum reached
-
-                            completed(null, val);
-                        }
-                        else {
-                            Promise.resolve( val ).then((v) => {
-                                try {
-                                    if ('function' === typeof v) {
-                                        unwrapNext( v(), level + 1 );
-                                    }
-                                    else {
-                                        completed(null, v);
-                                    }
-                                }
-                                catch (e) {
-                                    completed(e);
-                                }
-                            }).catch((err) => {
-                                completed(err);
-                            });
-                        }
-                    }
-                    catch (e) {
-                        completed(e);
-                    }
-                };
-
-                unwrapNext(valueOrResult, 0);
-            });
-        };
-
-        const $clone = function(valueOrResult: any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                $unwrap(valueOrResult).then((value) => {
-                    try {
-                        let clonedValue: any;
-
-                        if (Buffer.isBuffer(value)) {
-                            clonedValue = Buffer.concat([ value ]);
-                        }
-                        else {
-                            clonedValue = sc_helpers.cloneObject(value);
-                        }
-
-                        resolve( clonedValue );
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $asString = function(ValueOrResult: any, enc?: string): Promise<string> {
-            enc = sc_helpers.normalizeString(enc);
-            if ('' === enc) {
-                enc = undefined;
-            }
-
-            return new Promise<string>((resolve, reject) => {
-                $unwrap(ValueOrResult).then((val) => {
-                    try {    
-                        if (!sc_helpers.isNullOrUndefined(val)) {
-                            if (Buffer.isBuffer(val)) {
-                                val = val.toString(enc);
-                            }
-                            else if ('object' === typeof val) {
-                                val = JSON.stringify(val);
-                            }
-                            else {
-                                val = sc_helpers.toStringSafe(val);
-                            }
-                        }
-
-                        resolve(val);
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $readFile = function(file: string): Promise<Buffer> {
-            file = sc_helpers.toStringSafe(file);
-            if (!Path.isAbsolute(file)) {
-                file = Path.join(_currentDir, file);
-            }
-
-            return new Promise<Buffer>((resolve, reject) => {
-                FS.readFile(file, (err, data) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(data);
-                    }
-                });
-            });
-        };
-        const $readString = function(file: string, enc = 'utf8'): Promise<string> {
-            enc = sc_helpers.normalizeString(enc);
-            if ('' === enc) {
-                enc = 'utf8';
-            }
-
-            return new Promise<any>((resolve, reject) => {
-                $readFile(file).then((data) => {
-                    try {
-                        resolve( data.toString(enc) );
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $hash = function(...args: any[]): Promise<string | Buffer> {
-            return _forNoPromises(args, (algo: string, dataOrResult: any, asBuffer = false) => {
-                return new Promise<string | Buffer>((resolve, reject) => {
-                    try {
-                        $unwrap(dataOrResult).then((data) => {
-                            try {
-                                let hash: string | Buffer;
-
-                                if (!sc_helpers.isNullOrUndefined(data)) {
-                                    if (!Buffer.isBuffer(data)) {
-                                        if ('object' === typeof data) {
-                                            data = JSON.stringify(data);
-                                        }
-                                        else {
-                                            data = sc_helpers.toStringSafe(data);
-                                        }
-                                    }
-
-                                    hash = sc_helpers.hash(algo, data, asBuffer);
-                                }
-
-                                resolve(hash);
-                            }
-                            catch (e) {
-                                reject(e);
-                            }
-                        }).catch((err) => {
-                            reject(err);
-                        });
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                });
-            });
-        };
-
         const $ = function(...args: any[]): Promise<any[]> {
             return new Promise<any>((resolve, reject) => {
                 let wf = Workflows.create();
@@ -487,115 +304,54 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $addValue = function(...args: any[]): Promise<any> {
-            return _forNoPromises(args, (result: any) => {
-                $values.push(result);
+        const $addValue = function(valueOrResult: any): Promise<any> {
+            return new Promise<any>((resolve, reject) => {
+                try {
+                    Promise.resolve( valueOrResult ).then((result) => {
+                        try {
+                            $values.push(result);
 
-                return result;
+                            resolve(result);
+                        }
+                        catch (e) {
+                            reject(e);
+                        }
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                catch (e) {
+                    reject(e);
+                }
             });
         };
-        const $appendFile = function(file: string, valueOrResult: any): Promise<any> {
+        const $appendFile = function(file: string, data: any): void {
             file = sc_helpers.toStringSafe(file);
             if (!Path.isAbsolute(file)) {
                 file = Path.join(_currentDir, file);
             }
 
-            return new Promise<any>((resolve, reject) => {
-                $unwrap(valueOrResult).then((data) => {
-                    try {
-                        if (!Buffer.isBuffer(data)) {
-                            if ('object' === typeof data) {
-                                data = new Buffer( JSON.stringify(data), 'utf8' );
-                            }
-                            else {
-                                data = new Buffer( sc_helpers.toStringSafe(data), 'utf8')
-                            }
-                        }
+            FS.appendFileSync(file, data);
+        };
+        const $asString = function(val: any, enc?: string): string {
+            if (sc_helpers.isNullOrUndefined(val)) {
+                return val;
+            }
 
-                        FS.appendFile(file, data, (err) => {
-                            if (err) {
-                                reject(err);
-                            }
-                            else {
-                                resolve();
-                            }
-                        });
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+            enc = sc_helpers.normalizeString(enc);
+            if ('' === enc) {
+                enc = undefined;
+            }
+
+            if (Buffer.isBuffer(val)) {
+                return val.toString(enc);
+            }
+
+            return sc_helpers.toStringSafe(val);
         };
 
         let _currentDir = _permanentCurrentDirectory;
 
-        const $base64Decode = function(valueOrResult: any): Promise<Buffer> {
-            return new Promise<Buffer>((resolve, reject) => {
-                $unwrap(valueOrResult).then((b64) => {
-                    try {
-                        $asString(b64).then((value) => {
-                            try {
-                                let buffer: Buffer;
-
-                                if (!sc_helpers.isEmptyString(value)) {
-                                    buffer = new Buffer(value.trim(), 'base64');
-                                }
-
-                                resolve(buffer);
-                            }
-                            catch (e) {
-                                reject(e);
-                            }
-                        }).catch((err) => {
-                            reject(err);
-                        });
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $base64Encode = function(valueOrResult: any): Promise<string> {
-            return new Promise<string>((resolve, reject) => {
-                $unwrap(valueOrResult).then((value) => {
-                    try {
-                        let base64: string;
-
-                        if (!sc_helpers.isNullOrUndefined(value)) {
-                            if (Buffer.isBuffer(value)) {
-                                resolve(value.toString('base64'));
-                            }
-                            else {
-                                $asString(value, 'utf8').then((str) => {
-                                    try {
-                                        resolve( new Buffer(str, 'ascii').toString('base64') );
-                                    }
-                                    catch (e) {
-                                        reject(e);
-                                    }
-                                }).catch((err) => {
-                                    reject(err);
-                                });
-                            }
-                        }
-                        else {
-                            resolve();
-                        }
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
         const $clearHistory = function(clearGlobal?: boolean): void {
             _saveLastExpression = false;
             _saveToHistory = false;
@@ -626,31 +382,29 @@ function _executeExpression(_expr: string) {
         const $clearValues = function(): void {
             _values = [];
         };
-        const $cwd = function(...args: any[]) {
-            return _forNoPromises(args, (newPath?: string, permanent = false) => {
-                if (args.length > 0) {
-                    newPath = sc_helpers.toStringSafe(args[0]);
-                    if (sc_helpers.isEmptyString(newPath)) {
-                        newPath = vscode.workspace.rootPath;
-                    }
-                    if (!Path.isAbsolute(newPath)) {
-                        newPath = Path.join(_currentDir, newPath);
-                    }
-                    newPath = Path.resolve(newPath);
-
-                    _currentDir = newPath;
-                    if (sc_helpers.toBooleanSafe(permanent)) {
-                        _permanentCurrentDirectory = newPath;
-                    }
+        const $cwd = function(newPath?: string, permanent = false) {
+            if (arguments.length > 0) {
+                newPath = sc_helpers.toStringSafe(arguments[0]);
+                if (sc_helpers.isEmptyString(newPath)) {
+                    newPath = sc_workspace.getRootPath();
                 }
+                if (!Path.isAbsolute(newPath)) {
+                    newPath = Path.join(_currentDir, newPath);
+                }
+                newPath = Path.resolve(newPath);
 
-                return _currentDir;
-            });
+                _currentDir = newPath;
+                if (sc_helpers.toBooleanSafe(permanent)) {
+                    _permanentCurrentDirectory = newPath;
+                }
+            }
+
+            return _currentDir;
         };
 
-        const $DELETE = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $DELETE = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'DELETE', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('DELETE', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -753,9 +507,9 @@ function _executeExpression(_expr: string) {
         const $fromMarkdown = function(markdown: string): string {
             return _fromMarkdown(markdown);
         };
-        const $GET = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $GET = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'GET', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('GET', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -790,86 +544,12 @@ function _executeExpression(_expr: string) {
         const $guid = function(v4 = true) {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
         };
-        const $gunzip = function(valueOrResult: Buffer | string): Promise<Buffer> {
-            return new Promise<Buffer>((resolve, reject) => {
-                $unwrap(valueOrResult).then((val) => {
-                    try {
-                        if (sc_helpers.isNullOrUndefined(val)) {
-                            val = Buffer.alloc(0);
-                        }
-
-                        if (!Buffer.isBuffer(val)) {
-                            val = new Buffer(sc_helpers.toStringSafe(val).trim(), 'base64');
-                        }
-
-                        ZLib.gunzip(val, (err, uncompressedData) => {
-                            if (err) {
-                                reject(err);
-                            }
-                            else {
-                                resolve(uncompressedData);
-                            }
-                        });
-                    }
-                    catch (e) {
-                        reject(e);    
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+        const $hash = function(algo: string, data: string | Buffer, asBuffer = false): string | Buffer {
+            return sc_helpers.hash(algo, data, asBuffer);
         };
-        const $gzip = function(valueOrResult: any, base64 = false): Promise<Buffer | string> {
-            base64 = sc_helpers.toBooleanSafe(base64);
-            
-            return new Promise<Buffer | string>((resolve, reject) => {
-                $unwrap(valueOrResult).then((val) => {
-                    try {
-                        let compress = () => {
-                            ZLib.gzip(val, (err, compressedData) => {
-                                try {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    else {
-                                        resolve(base64 ? compressedData.toString('base64')
-                                                       : compressedData);
-                                    }
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            });
-                        };
-
-                        if (sc_helpers.isNullOrUndefined(val)) {
-                            val = Buffer.alloc(0);
-                        }
-
-                        if (Buffer.isBuffer(val)) {
-                            compress();
-                        }
-                        else {
-                            $asString(val).then((str) => {
-                                val = new Buffer(str, 'ascii');
-
-                                compress();
-                            }).catch((err) => {
-                                reject(err);
-                            });
-                        }
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $HEAD = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $HEAD = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'HEAD', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('HEAD', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -961,12 +641,6 @@ function _executeExpression(_expr: string) {
         const $log = function(msg: any) {
             $me.log(msg);
         };
-        const $lower = function(val: any, locale = false): string {
-            val = sc_helpers.toStringSafe(val);
-
-            return sc_helpers.toBooleanSafe(locale) ? val.toLocaleLowerCase()
-                                                    : val.toLowerCase();
-        };
         const $lstat = function(path: string): FS.Stats {
             path = sc_helpers.toStringSafe(path);
             if (!Path.isAbsolute(path)) {
@@ -974,43 +648,6 @@ function _executeExpression(_expr: string) {
             }
 
             return FS.lstatSync(path);
-        };
-        const $max = function(...args: any[]): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                let wf = Workflows.create();
-
-                if (args) {
-                    args.forEach((a, i) => {
-                        wf.next((wfCtx) => {
-                            return new Promise<any>((res, rej) => {
-                                $unwrap(a).then((val) => {
-                                    if (wfCtx.index > 0) {
-                                        if (val > wfCtx.result) {
-                                            wfCtx.result = val;
-                                        }
-                                    }
-                                    else {
-                                        wfCtx.result = val;
-                                    }
-
-                                    res();
-                                }).catch((err) => {
-                                    rej(err);
-                                });
-                            });
-                        });
-                    });
-                }
-
-                wf.start().then((maxValue) => {
-                    resolve(maxValue);
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $md5 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
-            return $hash('md5', dataOrResult, asBuffer);
         };
         const $mkdir = function(dir: string): void {
             dir = sc_helpers.toStringSafe(dir);
@@ -1020,39 +657,9 @@ function _executeExpression(_expr: string) {
 
             FSExtra.mkdirsSync(dir);
         };
-        const $min = function(...args: any[]): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                let wf = Workflows.create();
-
-                if (args) {
-                    args.forEach((a, i) => {
-                        wf.next((wfCtx) => {
-                            return new Promise<any>((res, rej) => {
-                                $unwrap(a).then((val) => {
-                                    if (wfCtx.index > 0) {
-                                        if (val < wfCtx.result) {
-                                            wfCtx.result = val;
-                                        }
-                                    }
-                                    else {
-                                        wfCtx.result = val;
-                                    }
-
-                                    res();
-                                }).catch((err) => {
-                                    rej(err);
-                                });
-                            });
-                        });
-                    });
-                }
-
-                wf.start().then((minValue) => {
-                    resolve(minValue);
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+        let $maxDepth = 64;
+        const $md5 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+            return sc_helpers.hash('md5', data, asBuffer);
         };
         const $noResultInfo = function(flag?: boolean, permanent = false): boolean {
             if (arguments.length > 0) {
@@ -1081,9 +688,9 @@ function _executeExpression(_expr: string) {
                 });
             });
         };
-        const $OPTIONS = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $OPTIONS = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'OPTIONS', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('OPTIONS', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -1110,18 +717,18 @@ function _executeExpression(_expr: string) {
 
             return pwd;
         };
-        const $PATCH = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $PATCH = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'PATCH', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('PATCH', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
                 });
             });
         };
-        const $POST = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $POST = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'POST', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('POST', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -1159,9 +766,9 @@ function _executeExpression(_expr: string) {
                 }
             });
         };
-        const $PUT = function(url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $PUT = function(url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, 'PUT', url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest('PUT', url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -1208,33 +815,40 @@ function _executeExpression(_expr: string) {
 
             return str;
         };
-        
-        const $readJSON = function(file: string, enc = 'utf8'): Promise<any> {
+        const $readFile = function(file: string): Buffer {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
+            return FS.readFileSync(file);
+        };
+        const $readJSON = function(file: string, enc = 'utf8'): any {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
             enc = sc_helpers.normalizeString(enc);
             if ('' === enc) {
                 enc = 'utf8';
             }
 
-            return new Promise<any>((resolve, reject) => {
-                $readString(file).then((json) => {
-                    try {
-                        let obj: any;
-
-                        if (json.length > 0) {
-                            obj = JSON.parse(json);
-                        }
-                        
-                        resolve(obj);
-                    }
-                    catch (e) {
-
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+            return JSON.parse( FS.readFileSync(file).toString(enc) );
         };
-        
+        const $readString = function(file: string, enc = 'utf8'): string {
+            file = sc_helpers.toStringSafe(file);
+            if (!Path.isAbsolute(file)) {
+                file = Path.join(_currentDir, file);
+            }
+
+            enc = sc_helpers.normalizeString(enc);
+            if ('' === enc) {
+                enc = 'utf8';
+            }
+
+            return FS.readFileSync(file).toString(enc);
+        };
         const $receiveFrom = function(port: number, type?: string): Promise<Buffer> {
             port = parseInt( sc_helpers.toStringSafe(port).trim() );
 
@@ -1327,9 +941,9 @@ function _executeExpression(_expr: string) {
                 history.splice(index, 1);
             }
         };
-        const $REQUEST = function(method: string, url: string, headersOrFileWithHeaders?: any, body?: string | Buffer): Promise<HttpResponse> {
+        const $REQUEST = function(method: string, url: string, headers?: any, body?: string | Buffer): Promise<HttpResponse> {
             return new Promise<HttpResponse>((resolve, reject) => {
-                _httpRequest(_currentDir, method, url, headersOrFileWithHeaders, body).then((result) => {
+                _httpRequest(method, url, headers, body).then((result) => {
                     resolve(result);
                 }).catch((err) => {
                     reject(err);
@@ -1433,68 +1047,14 @@ function _executeExpression(_expr: string) {
             return $sendTo(new Buffer(json, 'utf8'), 
                            port, addr, type);
         };
-        const $select = function(valueOrResult: any, selector: (val: any) => any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                Promise.resolve(valueOrResult).then((val) => {
-                    try {
-                        if (selector) {
-                            Promise.resolve( selector(val) ).then((v) => {
-                                resolve(v);
-                            }).catch((err) => {
-                                reject(err);
-                            });
-                        }
-                        else {
-                            resolve(val);
-                        }
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+        const $setState = function(val: any): any {
+            return $state = val;
         };
-        const $setState = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                try {
-                    Promise.resolve( valueOrResult ).then((val) => {
-                        try {
-                            let finished = (v: any) => {
-                                $state = v;
-
-                                resolve(v);
-                            };
-
-                            if (selector) {
-                                Promise.resolve( selector(val) ).then((v) => {
-                                    finished(v);
-                                }).catch((err) => {
-                                    reject(err);
-                                });
-                            }
-                            else {
-                                finished(val);
-                            }
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    }).catch((err) => {
-                        reject(err);
-                    });
-                }
-                catch (e) {
-                    reject(e);
-                }
-            });
+        const $sha1 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+            return sc_helpers.hash('sha1', data, asBuffer);
         };
-        const $sha1 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
-            return $hash('sha1', dataOrResult, asBuffer);
-        };
-        const $sha256 = function(dataOrResult: any, asBuffer = false): Promise<string | Buffer> {
-            return $hash('sha256', dataOrResult, asBuffer);
+        const $sha256 = function(data: string | Buffer, asBuffer = false): string | Buffer {
+            return sc_helpers.hash('sha256', data, asBuffer);
         };
         const $showResultInTab = function(flag?: boolean, permanent = false): boolean {
             if (arguments.length > 0) {
@@ -1506,59 +1066,6 @@ function _executeExpression(_expr: string) {
             }
 
             return _showResultInTab;
-        };
-        const $shuffle = function(valueOrResult: any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                $unwrap(valueOrResult).then((val) => {
-                    try {
-                        let arr: any;
-            
-                        let getValue: (index: number) => any = (i) => arr[i];
-                        let setValue: (index: number, v: any) => void = (i, v) => arr[i] = v;
-                        let getLength: () => number = () => arr.length;
-
-                        if (!sc_helpers.isNullOrUndefined(val)) {
-                            if (Buffer.isBuffer(val)) {
-                                arr = val;
-
-                                getValue = (i) => val.readUInt8(i);
-                                setValue = (i, v) => val.writeUInt8(v, i);
-                            }
-                            else if (Array.isArray(val)) {
-                                arr = val;
-                            }
-                            else {
-                                arr = sc_helpers.toStringSafe(val);
-
-                                setValue = (i, v) => {
-                                    v = sc_helpers.toStringSafe(v);
-
-                                    arr = arr.substr(0, i) + 
-                                          v + 
-                                          arr.substr(i + v.length);
-                                };
-                            }
-                        }
-
-                        if (!sc_helpers.isNullOrUndefined(arr)) {
-                            for (let i = 0; i < getLength(); i++) {
-                                let newIndex = RandomInt(0, getLength() - 1);
-
-                                let temp = getValue(i);
-                                setValue(i, getValue(newIndex));
-                                setValue(newIndex, temp);
-                            }
-                        }
-
-                        resolve(arr);
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
         };
         const $startApi = function(): Promise<any> {
             return new Promise<any>((resolve, reject) => {
@@ -1637,9 +1144,6 @@ function _executeExpression(_expr: string) {
         const $toHexView = function(val: any): string {
             return Hexy.hexy(val);
         };
-        const $trim = function(val: any): string {
-            return sc_helpers.toStringSafe(val).trim();
-        };
         const $unlink = function(path: string): void {
             path = sc_helpers.toStringSafe(path);
             if (!Path.isAbsolute(path)) {
@@ -1654,12 +1158,6 @@ function _executeExpression(_expr: string) {
             else {
                 FS.unlinkSync(path);
             }
-        };
-        const $upper = function(val: any, locale = false): string {
-            val = sc_helpers.toStringSafe(val);
-
-            return sc_helpers.toBooleanSafe(locale) ? val.toLocaleUpperCase()
-                                                    : val.toUpperCase();
         };
         const $uuid = function(v4 = true): string {
             return sc_helpers.toBooleanSafe(v4) ? UUID.v4() : UUID.v1();
@@ -1703,41 +1201,14 @@ function _executeExpression(_expr: string) {
 
             return wf.start($state);
         };
-        const $workspace = vscode.workspace.rootPath;
-        const $writeFile = function(file: string, valueOrResult: any): Promise<any> {
+        const $workspace = sc_workspace.getRootPath();
+        const $writeFile = function(file: string, data: any): void {
             file = sc_helpers.toStringSafe(file);
             if (!Path.isAbsolute(file)) {
                 file = Path.join(_currentDir, file);
             }
 
-            return new Promise<any>((resolve, reject) => {
-                $unwrap(valueOrResult).then((data) => {
-                    try {
-                        if (!Buffer.isBuffer(data)) {
-                            if ('object' === typeof data) {
-                                data = new Buffer( JSON.stringify(data), 'utf8' );
-                            }
-                            else {
-                                data = new Buffer( sc_helpers.toStringSafe(data), 'utf8')
-                            }
-                        }
-
-                        FS.writeFile(file, data, (err) => {
-                            if (err) {
-                                reject(err);
-                            }
-                            else {
-                                resolve();
-                            }
-                        });
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
+            FS.writeFileSync(file, data);
         };
         const $xmlDecode = function(str: string): string {
             str = sc_helpers.toStringSafe(str);
@@ -1750,101 +1221,6 @@ function _executeExpression(_expr: string) {
             return (new HtmlEntities.XmlEntities()).encode(str);
         };
 
-        const $download = function(url: string, file?: string): Promise<Buffer> {
-            return new Promise<Buffer>((resolve, reject) => {
-                $GET(url).then((result) => {
-                    try {
-                        if (!sc_helpers.isEmptyString(file)) {
-                            $noResultInfo(true);
-
-                            $writeFile(file, result.body);   
-                        }
-                        
-                        resolve(result.body);
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        const $openInEditor = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
-            return new Promise<any>((resolve, reject) => {
-                let openEditor = (result: any) => {
-                    if (sc_helpers.isNullOrUndefined(result)) {
-                        result = '';
-                    }
-                    else {
-                        if (Buffer.isBuffer(result)) {
-                            result = result.toString('utf8');
-                        }
-                        else {
-                            result = sc_helpers.toStringSafe(result);
-                        }
-                    }
-
-                    vscode.workspace.openTextDocument(null).then((doc) => {
-                        vscode.window.showTextDocument(doc).then(() => {
-                            try {
-                                let visibleTextEditors = vscode.window.visibleTextEditors;
-
-                                let editor: vscode.TextEditor;
-                                for (let i = 0; i < visibleTextEditors.length; i++) {
-                                    let e = visibleTextEditors[i];
-
-                                    if (e.document === doc) {
-                                        editor = e;
-                                        break;
-                                    }
-                                }
-
-                                if (editor) {
-                                    sc_helpers.setContentOfTextEditor(editor, result).then(() => {
-                                        $noResultInfo(true);
-
-                                        resolve();
-                                    }).catch((e) => {
-                                        reject(e);
-                                    });
-                                }
-                                else {
-                                    reject(new Error('No matching text editor found!'));
-                                }
-                            }
-                            catch (e) {
-                                reject(e);
-                            }
-                        }, (err) => {
-                            reject(err);
-                        });
-                    }, (err) => {
-                        reject(err);
-                    });
-                };
-
-                Promise.resolve(valueOrResult).then((result) => {
-                    try {
-                        if (selector) {
-                            Promise.resolve( selector(result) ).then((r) => {
-                                openEditor(r);
-                            }).catch((err) => {
-                                reject(err);
-                            });
-                        }
-                        else {
-                            openEditor(result);
-                        }
-                    }
-                    catch (e) {
-                        reject(e);
-                    }
-                }).catch((err) => {
-                    reject(err);
-                });
-            });
-        };
         const $openInTab = function(valueOrResult: any, selector?: (val: any) => any): Promise<any> {
             $showResultInTab(true);
 
@@ -1872,89 +1248,57 @@ function _executeExpression(_expr: string) {
         };
 
         const $eval = function(): any {
-            return _forNoPromises(arguments, (c: any) => {
-                return eval( sc_helpers.toStringSafe(c) );
-            });
+            return eval( sc_helpers.toStringSafe(arguments[0]) );
         };
 
         // execute expression ...
-        $unwrap( eval(_expr), $maxDepth ).then((result) => {
-            _completed(null, result);
-        }).catch((err) => {
-            _completed(err);
+        Promise.resolve( eval(_expr) ).then((result: any) => {
+            try {
+                let executeWhile: (r: any, level: number) => void;
+                executeWhile = (r, level) => {
+                    level = parseInt(sc_helpers.toStringSafe(level).trim());
+
+                    // check if maximum reached
+                    let md = parseInt(sc_helpers.toStringSafe($maxDepth).trim());
+                    if (!isNaN(md) && level >= md) {
+                        _completed(null, r);  // yes
+                        return;
+                    }
+
+                    if ('function' === typeof r) {
+                        let rRes = r.apply($thisArgs,
+                                           sc_helpers.toArray( $args ));
+
+                        Promise.resolve( rRes ).then((result2) => {
+                            try {
+                                executeWhile(result2, level + 1);
+                            }
+                            catch (e) {
+                                _completed(e);
+                            }
+                        }).catch((err) => {
+                            _completed(err);
+                        });
+                    }
+                    else {
+                        _completed(null, r);
+                    }
+                };
+
+                // execute while a result
+                // is a function
+                executeWhile(result, $level);
+            }
+            catch (e) {
+                _completed(e);
+            }
+        }).catch((e) => {
+            _completed(e);
         });
     }
     catch (e) {
         _completed(e);
     }
-}
-
-function _forNoPromises(args: ArrayLike<any>, func?: Function, thisArgs?: any): Promise<any> {
-    if (sc_helpers.isNullOrUndefined(args)) {
-        args = [];
-    }
-
-    return new Promise<any[]>((resolve, reject) => {
-        try {
-            let wf = Workflows.create();
-
-            wf.next((ctx) => {
-                ctx.result = [];
-            });
-
-            let addAction = (a: any) => {
-                wf.next((ctx) => {
-                    let realValues: any[] = ctx.result;
-
-                    return new Promise<any>((res, rej) => {
-                        try {
-                            Promise.resolve( a ).then((realValue) => {
-                                try {
-                                    realValues.push(realValue);
-                                    
-                                    res();
-                                }
-                                catch (e) {
-                                    rej(e);
-                                }
-                            }).catch((err) => {
-                                rej(err);
-                            });
-                        }
-                        catch (e) {
-                            rej(e);
-                        }
-                    });
-                });
-            };
-
-            for (let i = 0; i < args.length; i++) {
-                addAction(args[i]);
-            }
-
-            wf.start().then((realValues: any[]) => {
-                try {
-                    let result: any;
-                    if (func) {
-                        result = func.apply(thisArgs, realValues);
-                    }
-                    else {
-                        result = realValues;
-                    }
-
-                    resolve(result);
-                }
-                catch (e) {
-                    reject(e);
-                }
-            }).catch((err) => {
-                reject(err);
-            });
-        }
-        catch (e) {
-            reject(e);
-        }
-    });
 }
 
 function _fromMarkdown(markdown: any): string {
@@ -1978,95 +1322,80 @@ function _generateHelpHTML(): string {
     markdown += "## Functions\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
-    // markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
+    markdown += "| `$(...results: any[]): Promise<any[]>` | Executes a list of actions and returns its results. |\n";
     markdown += "| `$addValue(valueOrResult: any): Promise<any>` | Adds a value or result to `$value`. |\n";
-    // markdown += "| `$appendFile(path: string, valueOrResult: any): Promise<any>` | Appends data to a file. |\n";
-    markdown += "| `$asString(val: any): Promise<string>` | Returns a value as string. |\n";
-    markdown += "| `$base64Decode(valueOrResult: any): Promise<Buffer>` | Decodes a Base64 string. |\n";
-    markdown += "| `$base64Encode(valueOrResult: any): Promise<string>` | Encodes a value to a Base64 string. |\n";
-    // markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
-    // markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
-    // markdown += "| `$clone(valueOrResult: any): Promise<any>` | Clones a value or result. |\n";
-    markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): Promise<string>` | Gets or sets the current working directory for the execution. |\n";
-    markdown += "| `$DELETE(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP DELETE request. |\n";
-    // markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
-    // markdown += "| `$download(url: string, targetFile?: string): Promise<Buffer>` | Downloads data from an URL. |\n";
+    markdown += "| `$appendFile(path: string, data: any): void` | Appends data to a file. |\n";
+    markdown += "| `$asString(val: any): string` | Returns a value as string. |\n";
+    markdown += "| `$clearHistory(clearGlobal?: boolean): void` | Clears the history. |\n";
+    markdown += "| `$clearValues(): void` | Clears the list of values. |\n";
+    markdown += "| `$cwd(newPath?: string, permanent?: boolean = false): string` | Gets or sets the current working directory for the execution. |\n";
+    markdown += "| `$DELETE(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP DELETE request. |\n";
+    markdown += "| `$disableHexView(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if 'hex view' for binary results should be disabled or not. |\n";
     markdown += "| `$eval(code: string): any` | Executes code from execution / extension context. |\n";
-    // markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
-    // markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
-    // markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
-    // markdown += "| `$executeForState(result: any): Promise<any>` | Executes an action and writes it to the `$state` variable. |\n";
-    // markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
-    // markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
-    // markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
-    markdown += "| `$GET(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP GET request. |\n";
-    // markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    // markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
-    // markdown += "| `$gunzip(bufferOrBase64StringAsValueOrResult: any): Buffer` | UNcompresses data with GZIP. |\n";
-    // markdown += "| `$gzip(valueOrResult: any, base64: boolean = false): Promise<any>` | Compresses data with GZIP. |\n";
-    markdown += "| `$hash(algorithm: string, dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data. |\n";
-    markdown += "| `$HEAD(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP HEAD request. |\n";
-    // markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
-    // markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
-    // markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
-    // markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
-    // markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
-    // markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
-    // markdown += "| `$log(msg: any): void` | Logs a message. |\n";
-    // markdown += "| `$lower(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to lower case. |\n";
-    // markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
-    // markdown += "| `$max(...valuesOrResults: any[]): Promise<any>` | Returns the maximum value from a list of values. |\n";
-    markdown += "| `$md5(dataOrResult: any, asBuffer: boolean = false): Promise<any>` | Hashes data by MD5. |\n";
-    // markdown += "| `$min(...valuesOrResults: any[]): Promise<any>` | Returns the minimum value from a list of values. |\n";
-    // markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
-    // markdown += "| `$noResultInfo(flag?: boolean1, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
+    markdown += "| `$error(msg: string): vscode.Thenable<any>` | Shows an error popup. |\n";
+    markdown += "| `$execute(scriptPath: string, ...args: any[]): any` | Executes a script ([module](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.scriptmodule.html)). |\n";
+    markdown += "| `$executeCommand(command: string, ...args: any[]): vscode.Thenable<any>` | Executes a command. |\n";
+    markdown += "| `$executeForState(result: any): Promise<any>` | Executes an action and writes it to the `$state` variable. |\n";
+    markdown += "| `$exists(path: string): boolean` | Checks if a path exists. |\n";
+    markdown += "| `$findFiles(globPattern: string, ignore?: string[]): string[]` | Finds files using [glob patterns](https://github.com/isaacs/node-glob). |\n";
+    markdown += "| `$fromMarkdown(markdown: string): string` | Converts [Markdown](https://guides.github.com/features/mastering-markdown/) to HTML. |\n";
+    markdown += "| `$GET(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP GET request. |\n";
+    markdown += "| `$getCronJobs(): Promise<CronJobInfo[]>` | Returns a list of available [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$guid(v4: boolean = true): string` | Alias for `$uuid`. |\n";
+    markdown += "| `$hash(algorithm: string, data: any, asBuffer: boolean = false): string` | Hashes data. |\n";
+    markdown += "| `$HEAD(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP HEAD request. |\n";
+    markdown += "| `$help(): vscode.Thenable<any>` | Shows this help document. |\n";
+    markdown += "| `$history(selectEntry?: boolean = true): void` | Opens the list of expressions to execute and returns it. |\n";
+    markdown += "| `$htmlDecode(str: string): string` | Decodes the HTML entities in a string. |\n";
+    markdown += "| `$htmlEncode(str: string): string` | Encodes the HTML entities in a string. |\n";
+    markdown += "| `$info(msg: string): vscode.Thenable<any>` | Shows an info popup. |\n";
+    markdown += "| `$ip(v6: boolean = false, useHTTPs: boolean = false, timeout: number = 5000): Promise<string>` | Returns the public / Internet IP. |\n";
+    markdown += "| `$log(msg: any): void` | Logs a message. |\n";
+    markdown += "| `$lstat(path: string): fs.Stats` | Gets information about a path. |\n";
+    markdown += "| `$md5(data: any, asBuffer: boolean = false): string` | Hashes data by MD5. |\n";
+    markdown += "| `$mkdir(dir: string): void` | Creates a directory (with all its sub directories). |\n";
+    markdown += "| `$noResultInfo(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be displayed or not. |\n";
     markdown += "| `$now(): Moment.Moment` | Returns the current [time](https://momentjs.com/docs/). |\n";
-    // markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
-    // markdown += "| `$openInEditor(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new text editor by using an optional selector function for result to show. |\n";
-    // markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
-    markdown += "| `$OPTIONS(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP OPTIONS request. |\n";
-    // markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
-    markdown += "| `$PATCH(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PATCH request. |\n";
-    markdown += "| `$POST(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP POST request. |\n";
-    // markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
-    markdown += "| `$PUT(url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP PUT request. |\n";
-    // markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
-    // markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
-    // markdown += "| `$readFile(path: string): Promise<Buffer>` | Reads the data of a file. |\n";
-    // markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): Promise<any>` | Reads a JSON file and returns the its object / value. |\n";
-    // markdown += "| `$readString(file: string, encoding?: string = 'utf8'): Promise<string>` | Reads a file as string. |\n";
-    // markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    // markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
-    // markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
-    markdown += "| `$REQUEST(method: string, url: string, headersOrFileWithHeaders?: any, body?: any): Promise<HttpResponse>` | Does a HTTP request. |\n";
-    // markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
-    // markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    // markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
-    // markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
-    // markdown += "| `$select(valueOrResult: any, selector: Function): Promise<any>` | Projects a value to a new one by using a selector function. |\n";
-    // markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    // markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
-    // markdown += "| `$setState(valueOrResult: any, selector?: Function): Promise<any>): Promise<any>` | Sets the value of `$state` variable by using an optional value selector and returns the new value. |\n";
-    markdown += "| `$sha1(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-1. |\n";
-    markdown += "| `$sha256(data: any, asBuffer: boolean = false): Promise<any>` | Hashes data by SHA-256. |\n";
-    // markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
-    // markdown += "| `$shuffle(valueOrResult: any): Promise<any>` | Shuffles data. |\n";
-    // markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
-    // markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    // markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
-    // markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
-    // markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
-    // markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
-    // markdown += "| `$trim(val: any): string` | Removes the whitespaces from a value. |\n";
-    // markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
-    // markdown += "| `$unwrap(valueOrResult: any, maxDepth: number = 64): Promise<any>` | Unwraps a value or result. |\n";
-    // markdown += "| `$upper(val: any, locale: boolean = false): string` | Converts the chars of the string representation of a value to upper case. |\n";
-    // markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
-    // markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
-    // markdown += "| `$writeFile(path: string, valueOrResult: any): Promise<any>` | Writes data to a file. |\n";
-    // markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
-    // markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
-    // markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";
+    markdown += "| `$openHtml(htmlOrResult: any, tabTitle?: string): vscode.Thenable<any>` | Opens a HTML document in a new tab. |\n";
+    markdown += "| `$openInTab(valueOrResult: any, resultSelector?: Function): Promise<any>` | Opens a result or value in a new tab by using an optional selector function for result to show. |\n";
+    markdown += "| `$OPTIONS(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP OPTIONS request. |\n";
+    markdown += "| `$password(size?: number = 20, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a [password](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback). |\n";
+    markdown += "| `$PATCH(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP PATCH request. |\n";
+    markdown += "| `$POST(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP POST request. |\n";
+    markdown += "| `$push(valueOrResult: any, ignorePromise?: boolean = false): Promise<number>` | Adds a value (or result of a Promise) to `$values`. |\n";
+    markdown += "| `$PUT(url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP PUT request. |\n";
+    markdown += "| `$rand(minOrMax?: number = 0, max?: number = 2147483647): number` | Returns a random integer number. |\n";
+    markdown += "| `$randomString(size?: number = 8, chars?: string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'): string` | Generates a random string. |\n";
+    markdown += "| `$readFile(path: string): Buffer` | Reads the data of a file. |\n";
+    markdown += "| `$readJSON(file: string, encoding?: string = 'utf8'): any` | Reads a JSON file and returns the its object / value. |\n";
+    markdown += "| `$readString(file: string, encoding?: string = 'utf8'): string` | Reads a file as string. |\n";
+    markdown += "| `$receiveFrom(port: number, type?: string = 'udp4'): Promise<Buffer>` | Reads data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    markdown += "| `$receiveJSONFrom(port: number, type?: string = 'udp4'): Promise<any>` | Reads data as UTF-8 string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) ans parses it as JSON. |\n";
+    markdown += "| `$removeFromHistory(index?: number, fromGlobal = false): void` | Removes an expression from history. |\n";
+    markdown += "| `$REQUEST(method: string, url: string, headers?: any, body?: any): Promise<[HttpResponse](https://mkloubert.github.io/vs-script-commands/interfaces/_quick_.httpresponse.html)>` | Does a HTTP request. |\n";
+    markdown += "| `$require(id: string): any` | Loads a module from execution / extension context. |\n";
+    markdown += "| `$restartCronJobs(jobNames: string[]): Promise<any>` | (Re-)Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$saveJSON(path: string, val: any, encoding?: string = 'utf8'): void` | Saves a file as JSON to a file. |\n";
+    markdown += "| `$saveToHistory(saveGlobal: boolean = false, description?: string): void` | Saves the current expression to history. |\n";
+    markdown += "| `$sendJSONTo(val: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data as UTF-8 JSON string via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    markdown += "| `$sendTo(data: any, port: number, addr?: string = '127.0.0.1', type?: string = 'udp4'): Promise<any>` | Sends data via [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol). |\n";
+    markdown += "| `$setState(newValue: any): any` | Sets the value of `$state` variable and returns the new value. |\n";
+    markdown += "| `$sha1(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-1. |\n";
+    markdown += "| `$sha256(data: any, asBuffer: boolean = false): string` | Hashes data by SHA-256. |\n";
+    markdown += "| `$showResultInTab(flag?: boolean, permanent?: boolean = false): boolean` | Gets or sets if result should be shown in a tab window or a popup. |\n";
+    markdown += "| `$startApi(): Promise<any>` | Starts an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
+    markdown += "| `$startCronJobs(jobNames: string[]): Promise<any>` | Starts a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$stopApi(): Promise<any>` | Stops an [API host](https://github.com/mkloubert/vs-rest-api). |\n";
+    markdown += "| `$stopCronJobs(jobNames: string[]): Promise<any>` | Stops a list of [cron jobs](https://github.com/mkloubert/vs-cron). |\n";
+    markdown += "| `$stopReceiveFrom(id: number): boolean` | Stops an UDP connection by its ID. |\n";
+    markdown += "| `$toHexView(val: any): string` | Converts a value, like a buffer or string, to 'hex view'. |\n";
+    markdown += "| `$unlink(path: string): boolean` | Removes a file or folder. |\n";
+    markdown += "| `$uuid(v4: boolean = true): string` | Generates a new unique ID. |\n";
+    markdown += "| `$warn(msg: string): vscode.Thenable<any>` | Shows a warning popup. |\n";
+    markdown += "| `$writeFile(path: string, data: any): void` | Writes data to a file. |\n";
+    markdown += "| `$workflow(...actionsOrScriptPaths: any[]): Promise<any>` | Runs a [workflows](https://github.com/mkloubert/node-workflows). |\n";
+    markdown += "| `$xmlDecode(str: string): string` | Decodes the XML entities in a string. |\n";
+    markdown += "| `$xmlEncode(str: string): string` | Encodes the XML entities in a string. |\n";
     markdown += "\n";
 
     markdown += "\n";
@@ -2074,20 +1403,20 @@ function _generateHelpHTML(): string {
     markdown += "## Variables\n";
     markdown += "| Name | Description |\n";
     markdown += "| ---- | --------- |\n";
-    // markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
-    // markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
-    // markdown += "| `$events: NodeJS.EventEmitter` | Stores the underlying [event emitter](https://nodejs.org/api/events.html). |\n";
-    // markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
-    // markdown += "| `$globalEvents: NodeJS.EventEmitter` | Stores the global [event emitter](https://nodejs.org/api/events.html) that also can interact with all other things of that extension, like [commands](https://github.com/mkloubert/vs-script-commands#commands-). |\n";
-    // markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
-    // markdown += "| `$lastResult: any` | Stores the last result. |\n";
-    // markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
-    // markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
-    // markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
-    // markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
-    // markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
+    markdown += "| `$config: Configuration` | The current [settings](https://mkloubert.github.io/vs-script-commands/interfaces/_contracts_.configuration.html) of that extension. |\n";
+    markdown += "| `$doNotShowResult: Symbol` | A unique symbol that can be used as result and indicates NOT to show a result tab or popup. |\n";
+    markdown += "| `$events: NodeJS.EventEmitter` | Stores the underlying [event emitter](https://nodejs.org/api/events.html). |\n";
+    markdown += "| `$extension: vscode.ExtensionContext` | Stores the [context](https://code.visualstudio.com/docs/extensionAPI/vscode-api#_a-nameextensioncontextaspan-classcodeitem-id1016extensioncontextspan) of that extension. |\n";
+    markdown += "| `$globalEvents: NodeJS.EventEmitter` | Stores the global [event emitter](https://nodejs.org/api/events.html) that also can interact with all other things of that extension, like [commands](https://github.com/mkloubert/vs-script-commands#commands-). |\n";
+    markdown += "| `$globals: any` | Stores the global data from the [settings](https://github.com/mkloubert/vs-script-commands#settings-). |\n";
+    markdown += "| `$lastResult: any` | Stores the last result. |\n";
+    markdown += "| `$me: ScriptCommandController` | The [controller](https://mkloubert.github.io/vs-script-commands/classes/_controller_.scriptcommandcontroller.html) of that extension. |\n";
+    markdown += "| `$nextValue: any` | The value for the next execution. The value will be resettet after each execution. |\n";
+    markdown += "| `$output: vscode.OutputChannel` | Stores the [output channel](https://code.visualstudio.com/docs/extensionAPI/vscode-api#OutputChannel) of that extension. |\n";
+    markdown += "| `$previousValue: any` | The value from the previous execution. |\n";
+    markdown += "| `$state: any` | Stores a value that should be available for next executions. |\n";
     markdown += "| `$values: any[]` | The list of permanent stored values. |\n";
-    // markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
+    markdown += "| `$workspace: string` | Stores the path of the current workspace. |\n";
     markdown += "\n";
 
     let html = '';
@@ -2184,19 +1513,8 @@ function _handleUDPServerActionsSafe(): boolean {
     return false;
 }
 
-function _httpRequest(currentDir: string, method: string, url: string, headers: any, body: string | Buffer): Promise<HttpResponse> {
+function _httpRequest(method: string, url: string, headers: any, body: string | Buffer, resultWithHeaders = false): Promise<HttpResponse> {
     method = sc_helpers.toStringSafe(method).toUpperCase().trim();
-
-    currentDir = sc_helpers.toStringSafe(currentDir);
-    if ('' === currentDir.trim()) {
-        currentDir = './';
-    }
-    
-    if (!Path.isAbsolute(currentDir)) {
-        currentDir = Path.join(vscode.workspace.rootPath, currentDir);
-    }
-
-    currentDir = Path.resolve(currentDir);
     
     return new Promise<HttpResponse>((resolve, reject) => {
         try {
@@ -2223,6 +1541,7 @@ function _httpRequest(currentDir: string, method: string, url: string, headers: 
                                  cb?: (res: HTTP.IncomingMessage) => void) => HTTP.ClientRequest;
 
             requestOpts = {
+                headers: headers,
                 hostname: sc_helpers.normalizeString(u.hostname),
                 method: method,
                 protocol: sc_helpers.normalizeString(u.protocol),
@@ -2266,55 +1585,7 @@ function _httpRequest(currentDir: string, method: string, url: string, headers: 
                 }
             }
 
-            let startRequest = () => {
-                try {
-                    request.end();
-                }
-                catch (e) {
-                    reject(e);
-                }
-            };
-
-            let getHeaders = () => {
-                if (sc_helpers.isNullOrUndefined(headers)) {
-                    startRequest();  // no headers
-                }
-                else {
-                    if ('object' === typeof headers) {
-                        requestOpts.headers = headers;
-
-                        startRequest();
-                    }
-                    else {
-                        // from file
-
-                        let headerFile = sc_helpers.toStringSafe(headers);
-                        if (!Path.isAbsolute(headerFile)) {
-                            headerFile = Path.join(currentDir, headerFile);
-                        }
-
-                        FS.readFile(headerFile, (err, data) => {
-                            if (err) {
-                                reject(err);
-                            }
-                            else {
-                                try {
-                                    if (data.length > 0) {
-                                        requestOpts.headers = JSON.parse( data.toString('utf8') );
-                                    }
-
-                                    startRequest();
-                                }
-                                catch (e) {
-                                    reject(e);
-                                }
-                            }
-                        });
-                    }
-                }
-            };
-
-            getHeaders();
+            request.end();
         }
         catch (e) {
             reject(e);
@@ -2351,6 +1622,7 @@ function _toHistoryEntryEx(entry: HistoryEntry,
 
     return ewi;
 }
+
 
 /**
  * Does a "quick execution".
@@ -2429,7 +1701,7 @@ export function reset() {
         _permanentCurrentDirectory = './';
     }
     if (!Path.isAbsolute(_permanentCurrentDirectory)) {
-        _permanentCurrentDirectory = Path.join(vscode.workspace.rootPath, _permanentCurrentDirectory);
+        _permanentCurrentDirectory = Path.join(sc_workspace.getRootPath(), _permanentCurrentDirectory);
     }
     _permanentCurrentDirectory = Path.resolve(_permanentCurrentDirectory);
 

@@ -35,6 +35,7 @@ import * as sc_contracts from './contracts';
 import * as sc_helpers from './helpers';
 import * as sc_quick from './quick';
 import * as sc_urls from './urls';
+import * as sc_workspace from './workspace';
 import * as vscode from 'vscode';
 
 
@@ -777,8 +778,8 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                                                     ignore = sc_helpers.distinctArray(ignore);
 
                                                     Glob(pattern, <any>{
-                                                        cwd: vscode.workspace.rootPath,
-                                                        root: vscode.workspace.rootPath,
+                                                        cwd: sc_workspace.getRootPath(),
+                                                        root: sc_workspace.getRootPath(),
                                                         dot: true,
                                                         nocase: true,
                                                         nodir: true,
@@ -1007,7 +1008,12 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                             alignment = vscode.StatusBarAlignment.Right;
                         }
 
-                        btn = vscode.window.createStatusBarItem(alignment);
+                        let priority: number;
+                        if (!sc_helpers.isNullOrUndefined(c.button.priority)) {
+                            priority = parseFloat(sc_helpers.toStringSafe(c.button.priority).trim());
+                        }
+
+                        btn = vscode.window.createStatusBarItem(alignment, priority);
                         btn.command = cmdId;
                         
                         // caption
@@ -1030,10 +1036,6 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                         let color = sc_helpers.normalizeString(c.button.color);
                         if ('' !== color) {
                             btn.color = color;
-                        }
-
-                        if (!sc_helpers.isNullOrUndefined(c.button.priority)) {
-                            btn.priority = parseFloat(sc_helpers.toStringSafe(c.button.priority).trim());
                         }
 
                         if (sc_helpers.toBooleanSafe(c.button.show, true)) {

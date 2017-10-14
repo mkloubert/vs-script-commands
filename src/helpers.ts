@@ -30,6 +30,7 @@ import * as HTTP from 'http';
 import * as Path from 'path';
 import * as Moment from 'moment';
 import * as sc_contracts from './contracts';
+import * as sc_workspace from './workspace';
 import * as vscode from 'vscode';
 
 /**
@@ -259,7 +260,7 @@ export function isNullOrUndefined(val: any): boolean {
  */
 export function loadModule<TModule>(file: string, useCache: boolean = false): TModule {
     if (!Path.isAbsolute(file)) {
-        file = Path.join(vscode.workspace.rootPath, file);
+        file = Path.join(sc_workspace.getRootPath(), file);
     }
     file = Path.resolve(file);
 
@@ -339,7 +340,7 @@ export function open(target: string, opts?: OpenOptions): Promise<ChildProcess.C
             let appArgs: string[] = [];
             let args: string[] = [];
             let cpOpts: ChildProcess.SpawnOptions = {
-                cwd: opts.cwd || vscode.workspace.rootPath,
+                cwd: opts.cwd || sc_workspace.getRootPath(),
             };
 
             if (Array.isArray(opts.app)) {
@@ -593,44 +594,6 @@ export function replaceAllStrings(str: any, searchValue: any, replaceValue: any)
 
     return str.split(searchValue)
               .join(replaceValue);
-}
-
-/**
- * Sets the content of a text editor.
- * 
- * @param {vscode.TextEditor} editor The text editor.
- * @param {string} value The new value.
- * 
- * @param {PromiseLike<vscode.TextDocument>} The promise.
- */
-export function setContentOfTextEditor(editor: vscode.TextEditor, value: string): Promise<vscode.TextDocument> {
-    value = toStringSafe(value);
-    
-    return new Promise<any>((resolve, reject) => {
-        let completed = createSimplePromiseCompletedAction<vscode.TextDocument>(resolve, reject);
-        
-        try {
-            editor.edit((builder) => {
-                try {
-                    let doc = editor.document;
-                    if (doc) {
-                        let r = new vscode.Range(new vscode.Position(0, 0),
-                                                 new vscode.Position(doc.lineCount, 0));
-
-                        builder.replace(r, value);
-                    }
-
-                    completed(null, editor.document);
-                }
-                catch (e) {
-                    completed(e);
-                }
-            });
-        }
-        catch (e) {
-            completed(e);
-        }
-    });
 }
 
 /**

@@ -1,12 +1,8 @@
 # Change Log (vs-script-commands)
 
-## 5.0.0 (?????? ????, ????; functions and variables)
+## 5.0.0 (October 14th, 2017; multi root support)
 
-* all [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-) can be executed completely asynchron now
-* added `$base64Decode`, `$base64Encode`, `$clone`, `$download`, `$gunzip`, `$gzip`, `$lower`, `$max`, `$min`, `$openInEditor`, `$select`, `$shuffle`, `$trim`, `$unwrap` and `$upper` functions for [quick executions](https://github.com/mkloubert/vs-script-commands#quick-execution-)
-* functions, that do HTTP requests, can load headers from files now
-* `$asString` serializes general objects to JSON now
-* binary data is shown in tab automatically now
+* started to refactor to new, upcoming [Multi Root Workspace API](https://github.com/Microsoft/vscode/wiki/Extension-Authoring:-Adopting-Multi-Root-Workspace-APIs)
 
 ## 4.14.0 (May 7th, 2017; functions and variables)
 

@@ -1072,41 +1072,44 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      * Reloads configuration.
      */
     public reloadConfiguration() {
-        let me = this;
+        const ME = this;
 
         try {
-            let newCfg = <sc_contracts.Configuration>vscode.workspace.getConfiguration("script.commands");
-            if (!newCfg) {
-                newCfg = {};
-            }
+            const SETTINGS_FILE = Path.join(
+                sc_workspace.getRootPath(),
+                './.vscode/settings.json',
+            );
 
-            me._config = newCfg;
-            me._htmlDocs = [];
+            const LOADED_CONFIG: sc_contracts.Configuration = vscode.workspace.getConfiguration('script.commands',
+                                                              vscode.Uri.file(SETTINGS_FILE)) || <any>{};
 
-            me.reloadCommands();
+            ME._config = LOADED_CONFIG;
+            ME._htmlDocs = [];
+
+            ME.reloadCommands();
 
             // reset all "quick" stuff
             sc_quick.reset
-                    .apply(me, []);
+                    .apply(ME, []);
 
             // startup commands
-            let commandsToExecute = me.getCommands().filter(x => {
+            let commandsToExecute = ME.getCommands().filter(x => {
                 return sc_helpers.toBooleanSafe(x.onStartup);
             });
-            me.executeScriptCommands(commandsToExecute).then(() => {
+            ME.executeScriptCommands(commandsToExecute).then(() => {
                 //TODO
             }).catch((err) => {
                 vscode.window.showErrorMessage(`[vs-script-commands] Execution of script commands (ScriptCommandController.reloadConfiguration) failed: ${sc_helpers.toStringSafe(err)}`);
             });;
 
-            if (sc_helpers.toBooleanSafe(newCfg.showOutput)) {
+            if (sc_helpers.toBooleanSafe(LOADED_CONFIG.showOutput)) {
                 this.outputChannel.show();
             }
 
-            me.showNewVersionPopup();
+            ME.showNewVersionPopup();
         }
         catch (e) {
-            me.log(`[ERROR] ScriptCommandController.reloadConfiguration(1): ${sc_helpers.toStringSafe(e)}`);
+            ME.log(`[ERROR] ScriptCommandController.reloadConfiguration(1): ${sc_helpers.toStringSafe(e)}`);
         }
     }
     

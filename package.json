@@ -2,10 +2,10 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "5.0.2",
+  "version": "6.0.0",
   "publisher": "mkloubert",
   "engines": {
-    "vscode": "^1.17.0"
+    "vscode": "^1.18.0"
   },
   "license": "MIT",
   "categories": [
@@ -38,12 +38,18 @@
         "command": "extension.scriptCommands.quickExecution",
         "title": "Quick execution",
         "category": "Script commands"
+      },
+      {
+        "command": "extension.scriptCommands.selectWorkspace",
+        "title": "Select workspace",
+        "category": "Script commands"
       }
     ],
     "configuration": {
       "properties": {
         "script.commands": {
           "type": "object",
+          "scope": "resource",
           "properties": {
             "commands": {
               "description": "One or more command to register.",

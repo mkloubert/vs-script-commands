@@ -225,6 +225,7 @@ Press `F1` to open the list of commands and enter one of the following commands:
 | `Script commands: Execute command` | Executes a command defined by that extension. | `extension.scriptCommands.execute` |
 | `Script commands: Execute VSCode command` | Executes another command that is available in VSCode. | `extension.scriptCommands.executeVSCode` |
 | `Script commands: Quick execution` | Executes a JavaScript expression quickly. | `extension.scriptCommands.quickExecution` |
+| `Script commands: Select workspace` | Changes the current workspace, s. [Multi-root Workspaces](https://code.visualstudio.com/docs/editor/multi-root-workspaces). | `extension.scriptCommands.selectWorkspace` |
 
 ### Status bar buttons [[&uarr;](#how-to-use-)]
 

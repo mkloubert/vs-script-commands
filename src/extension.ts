@@ -98,6 +98,21 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // select workspace
+    let selectWorkspace = vscode.commands.registerCommand('extension.scriptCommands.selectWorkspace', async () => {
+        try {
+            const FOLDER = await sc_workspace.selectWorkspace();
+            if (FOLDER) {
+                await Promise.resolve(
+                    controller.onDidChangeConfiguration()
+                );
+            }
+        }
+        catch (e) {
+            vscode.window.showErrorMessage(`[SELECT WORKSPACE ERROR]: ${sc_helpers.toStringSafe(e)}`);
+        }
+    });
+
     // open HTML document
     let openHtmlDoc = vscode.commands.registerCommand('extension.scriptCommands.openHtmlDoc', (doc: sc_contracts.Document) => {
         try {
@@ -149,7 +164,8 @@ export function activate(context: vscode.ExtensionContext) {
                                                                         controller));
 
     context.subscriptions.push(controller,
-                               executeCmd, executeVSCmd, quickExecution, openHtmlDoc,
+                               executeCmd, executeVSCmd, quickExecution, selectWorkspace,
+                               openHtmlDoc,
                                htmlViewer);
 
     controller.onActivated();

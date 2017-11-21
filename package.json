@@ -2,7 +2,7 @@
   "name": "vs-script-commands",
   "displayName": "Script Commands",
   "description": "Adds additional commands to Visual Studio Code that uses scripts (JavaScript) for execution.",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "publisher": "mkloubert",
   "engines": {
     "vscode": "^1.18.0"
@@ -51,6 +51,11 @@
           "type": "object",
           "scope": "resource",
           "properties": {
+            "autoSelectWorkspace": {
+              "type": "boolean",
+              "description": "Select the workspace by active text editor automatically or not.",
+              "default": false
+            },
             "commands": {
               "description": "One or more command to register.",
               "oneOf": [
@@ -131,6 +136,11 @@
                     "id": {
                       "type": "string",
                       "description": "The ID of the command."
+                    },
+                    "onActiveEditorChanged": {
+                      "type": "boolean",
+                      "description": "Is invoked when the active text editor has been changed.",
+                      "default": false
                     },
                     "onClose": {
                       "type": "boolean",

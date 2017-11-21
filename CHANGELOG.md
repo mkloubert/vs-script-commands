@@ -1,8 +1,13 @@
 # Change Log (vs-script-commands)
 
+## 6.1.0 (November 20th, 2017; auto select workspace)
+
+* added `autoSelectWorkspace` setting, which can select the current workspace by active text editor automatically
+* added `onActiveEditorChanged` event setting for commands
+
 ## 6.0.0 (November 19th, 2017; finished multi root support)
 
-* added `extension.scriptCommands.selectWorkspace` which can change between workspaces now
+* added `extension.scriptCommands.selectWorkspace`, which can change between workspaces now
 
 ## 5.0.2 (October 14th, 2017; multi root support)
 

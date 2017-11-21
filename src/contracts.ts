@@ -56,6 +56,10 @@ export interface ActionQuickPickItem extends vscode.QuickPickItem {
  */
 export interface Configuration {
     /**
+     * Select the workspace by active text editor automatically or not.
+     */
+    autoSelectWorkspace?: boolean;
+    /**
      * One or more command to register.
      */
     commands?: ScriptCommand | ScriptCommand[];
@@ -207,6 +211,10 @@ export enum FileChangeType {
      * File is going to be saved.
      */
     WillSave = 7,
+    /**
+     * Active text editor has been changed.
+     */
+    ActiveEditorChanged = 8,
 }
 
 /**
@@ -302,6 +310,10 @@ export interface ScriptCommand {
      */
     id: string;
     /**
+     * Is invoked when the active text editor has been changed.
+     */
+    onActiveEditorChanged?: boolean;
+    /**
      * Executes the command on close or not.
      */
     onClose?: boolean;
@@ -361,6 +373,20 @@ export interface ScriptCommand {
      * Supress own arguments of the extension or not.
      */
     suppressArguments?: boolean;
+}
+
+/**
+ * A context that stores the data when a command is executed when active text editor has been changed.
+ */
+export interface ScriptCommandActiveEditorChangedContext {
+    /**
+     * The new editor.
+     */
+    current: vscode.TextEditor;
+    /**
+     * The previous editor.
+     */
+    previous?: vscode.TextEditor;
 }
 
 /**

@@ -163,6 +163,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(controller.onDidChangeTextDocument,
                                                                         controller));
 
+    // notfiy active editor changed
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(controller.onDidChangeActiveTextEditor,
+                                                                         controller));
+
     context.subscriptions.push(controller,
                                executeCmd, executeVSCmd, quickExecution, selectWorkspace,
                                openHtmlDoc,

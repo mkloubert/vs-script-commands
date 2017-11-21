@@ -54,6 +54,7 @@ Add a `script.commands` section:
 
 | Name | Description |
 | ---- | --------- |
+| `autoSelectWorkspace` | Select the workspace by active text editor automatically or not. Default `(false)` |
 | `commands` | One or more [commands](#commands-) to register. |
 | `disableNewVersionPopups` | Disables the display of popups that reports for a new version of that extension. Default `(false)` |
 | `globals` | Global data available for ALL commands defined by that extension. |
@@ -192,6 +193,7 @@ A command entry provides the following properties:
 | `description` | The description for the command. |
 | `displayName` | The custom display name. |
 | `id` | The ID of the command. |
+| `onActiveEditorChanged` | Is invoked when the active text editor has been changed. Default `(false)` |
 | `onClose` | Executes the command on VSCode closes or not. Default `(false)` |
 | `onConfigChanged` | Is invoked after `settings.json` has been changed. Default `(false)` |
 | `onEditorChanged` | Is invoked after a text editor changed. Default `(false)` |

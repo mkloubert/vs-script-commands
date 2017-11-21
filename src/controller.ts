@@ -24,6 +24,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 import * as Events from 'events';
+import * as FSExtra from 'fs-extra';
 import * as Glob from 'glob';
 import * as Globals from './globals';
 const Hexy = require('hexy');
@@ -121,6 +122,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      */
     protected readonly _CONTEXT: vscode.ExtensionContext;
     /**
+     * Stores the current active text editor.
+     */
+    protected _currentTextEditor: vscode.TextEditor;
+    /**
      * The global file system watcher.
      */
     protected _fileSystemWatcher: vscode.FileSystemWatcher;
@@ -128,6 +133,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
      * Storage for global HTML documents.
      */
     protected _htmlDocs: sc_contracts.Document[];
+    /**
+     * Stores if extension is reloading its configuration or not.
+     */
+    protected _isReloadingConfig = false;
     /**
      * Stores the global output channel.
      */
@@ -423,6 +432,119 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     }
 
     /**
+     * Is invoked after active text editor has been changed.
+     * 
+     * @param {vscode.TextEditor} editor The new editor.
+     */
+    public onDidChangeActiveTextEditor(editor: vscode.TextEditor) {
+        const ME = this;
+
+        const PREVIOUS_EDITOR = ME._currentTextEditor;
+        ME._currentTextEditor = editor;
+        
+        const AUTO_SELECT_WORKSPACE_COMPLETED = (err: any) => {
+            if (err) {
+                vscode.window
+                      .showWarningMessage(`[vs-script-commands] Could not auto-select workspace: ${sc_helpers.toStringSafe(err)}`);
+            }
+
+            let uri: vscode.Uri;
+            if (editor.document) {
+                uri = editor.document.uri;
+            }
+
+            ME.onFileChange(uri, sc_contracts.FileChangeType.ActiveEditorChanged, (sc) => {
+                let ctx: sc_contracts.ScriptCommandActiveEditorChangedContext = {
+                    current: editor,
+                    previous: PREVIOUS_EDITOR,
+                };
+
+                return [ ctx ];
+            });
+        };
+
+        // auto select workspace
+        try {
+            const MATCHING_FOLDERS: vscode.WorkspaceFolder[] = [];
+
+            const UPDATE_WORKSPACE = (newFolder: vscode.WorkspaceFolder) => {
+                try {
+                    if (newFolder) {
+                        sc_workspace.setWorkspace(newFolder);
+                        
+                        ME.onDidChangeConfiguration();
+                    }
+                }
+                catch (e) {
+                    AUTO_SELECT_WORKSPACE_COMPLETED(e);
+                }
+            };
+
+            if (editor) {
+                if (sc_helpers.toBooleanSafe( ME.config.autoSelectWorkspace )) {
+                    const DOC = editor.document;
+
+                    if (DOC) {
+                        // only for document
+
+                        if (FSExtra.existsSync( DOC.fileName )) {
+                            const FILE = Path.resolve( DOC.fileName );
+                            const DIR = Path.resolve( Path.dirname(FILE) );
+
+                            const CURRENT_DIR = Path.resolve( sc_workspace.getRootPath() );
+                            if (CURRENT_DIR !== DIR) {
+                                // folders are different
+                                const WORKSPACE_FOLDERS = (vscode.workspace.workspaceFolders || []).filter(wsf => {
+                                    return wsf;
+                                });
+
+                                // try to find matching folder
+                                // only there are at least 2 folders
+                                if (WORKSPACE_FOLDERS.length > 1) {
+                                    for (let i = 0; i < WORKSPACE_FOLDERS.length; i++) {
+                                        const WSF = WORKSPACE_FOLDERS[i];
+                                        
+                                        const URI = WSF.uri;
+                                        if (URI) {
+                                            let wsfPath = URI.fsPath;
+                                            if (!sc_helpers.isEmptyString(wsfPath)) {
+                                                wsfPath = Path.resolve(wsfPath);
+                                                if (DIR.startsWith(wsfPath)) {
+                                                    MATCHING_FOLDERS.push(WSF);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (MATCHING_FOLDERS.length > 0) {
+                        if (1 === MATCHING_FOLDERS.length) {
+                            UPDATE_WORKSPACE(
+                                MATCHING_FOLDERS[0]
+                            );
+                        }   
+                        else {
+                            // more than one machting folders
+
+                            sc_workspace.selectWorkspace().then((newWorkspaceFolder) => {
+                                UPDATE_WORKSPACE(newWorkspaceFolder);
+                            }).catch((err) => {
+                                AUTO_SELECT_WORKSPACE_COMPLETED(err);
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (e) {
+            AUTO_SELECT_WORKSPACE_COMPLETED(e);
+        }
+    }
+
+    /**
      * Event after configuration changed.
      */
     public onDidChangeConfiguration() {
@@ -430,7 +552,7 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     }
 
     /**
-     * Event after a document has closed.
+     * Event after text document has been changed.
      * 
      * @param {vscode.TextDocument} doc The document.
      */
@@ -541,6 +663,10 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
             let doesMatch = false;
 
             switch (type) {
+                case sc_contracts.FileChangeType.ActiveEditorChanged:
+                    doesMatch = sc_helpers.toBooleanSafe(c.onActiveEditorChanged);
+                    break;
+
                 case sc_contracts.FileChangeType.Changed:
                     doesMatch = sc_helpers.toBooleanSafe(c.onFileChanged);
                     break;
@@ -1074,7 +1200,13 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
     public reloadConfiguration() {
         const ME = this;
 
+        if (ME._isReloadingConfig) {
+            return;
+        }
+
         try {
+            ME._isReloadingConfig = true;
+
             const SETTINGS_FILE = Path.join(
                 sc_workspace.getRootPath(),
                 './.vscode/settings.json',
@@ -1110,6 +1242,11 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         }
         catch (e) {
             ME.log(`[ERROR] ScriptCommandController.reloadConfiguration(1): ${sc_helpers.toStringSafe(e)}`);
+        }
+        finally {
+            ME._isReloadingConfig = false;
+
+            ME._currentTextEditor = vscode.window.activeTextEditor;
         }
     }
     

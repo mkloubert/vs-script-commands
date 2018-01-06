@@ -1,5 +1,12 @@
 # Change Log (vs-script-commands)
 
+## 7.0.0 (January 6th, 2017; npm packages)
+
+* updated [npm packages](https://www.npmjs.com):
+  * [marked](https://www.npmjs.com/package/marked) to `"^0.3.9`
+  * [moment](https://www.npmjs.com/package/moment) to `"^2.20.1`
+  * [public-ip](https://www.npmjs.com/package/public-ip) to `"^2.4.0`
+
 ## 6.1.0 (November 20th, 2017; auto select workspace)
 
 * added `autoSelectWorkspace` setting, which can select the current workspace by active text editor automatically

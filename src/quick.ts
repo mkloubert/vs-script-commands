@@ -89,7 +89,7 @@ export interface HttpResponse {
     /**
      * The list of response headers.
      */
-    headers: { [key: string]: string };
+    headers: HTTP.IncomingHttpHeaders;
     /**
      * The status message.
      */
@@ -1556,14 +1556,14 @@ function _httpRequest(method: string, url: string, headers: any, body: string | 
             switch (requestOpts.protocol) {
                 case 'https:':
                     requestFactory = HTTPs.request;
-                    if (isNaN(requestOpts.port)) {
+                    if (isNaN(<number>requestOpts.port)) {
                         requestOpts.port = 443;
                     }
                     break;
 
                 default:
                     requestFactory = HTTP.request;
-                    if (isNaN(requestOpts.port)) {
+                    if (isNaN(<number>requestOpts.port)) {
                         requestOpts.port = 80;
                     }
                     break;

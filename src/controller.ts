@@ -103,8 +103,6 @@ export interface CommandEntryQuickPickItem extends sc_contracts.ScriptCommandQui
 }
 
 
-const KEY_LAST_KNOWN_VERSION = 'vsscLastKnownVersion';
-
 /**
  * The controller class for that extension.
  */
@@ -1238,7 +1236,9 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
                 this.outputChannel.show();
             }
 
-            ME.showNewVersionPopup();
+            ME.showDeprecatedMessage().then(() => {
+            }).catch(() => {
+            });
         }
         catch (e) {
             ME.log(`[ERROR] ScriptCommandController.reloadConfiguration(1): ${sc_helpers.toStringSafe(e)}`);
@@ -1378,67 +1378,49 @@ export class ScriptCommandController extends Events.EventEmitter implements vsco
         }
     }
 
-    /**
-     * Shows the popup of for new version.
-     */
-    protected showNewVersionPopup() {
-        let me = this;
+    private async showDeprecatedMessage() {
+        const KEY_SHOW_DEPRECATED_MESSAGE = 'vsscShowDeprecatedMessage';
 
-        if (this._PACKAGE_FILE) {
-            let currentVersion = this._PACKAGE_FILE.version;
+        try {
+            this._CONTEXT
+                .globalState
+                .update('vsscLastKnownVersion', undefined);
+        } catch { }
 
-            if (currentVersion) {
-                // update last known version
-                let updateCurrentVersion = false;
-                try {
-                    let lastKnownVersion: any = this._CONTEXT.globalState.get(KEY_LAST_KNOWN_VERSION, false);
-                    if (lastKnownVersion != currentVersion) {
-                        if (!sc_helpers.toBooleanSafe(this.config.disableNewVersionPopups)) {
-                            // tell the user that it runs on a new version
-                            updateCurrentVersion = true;
+        let newShowMessageValue: boolean;
+        try {
+            const SHOW_MESSAGE = sc_helpers.toBooleanSafe(
+                this._CONTEXT.globalState.get(KEY_SHOW_DEPRECATED_MESSAGE, true),
+                true
+            );
 
-                            // [BUTTON] show change log
-                            let changeLogBtn: sc_contracts.ActionMessageItem = {
-                                action: () => {
-                                    sc_helpers.open(sc_urls.CHANGELOG);
-                                },
-                                title: 'Show changelog...',
-                            };
+            newShowMessageValue = SHOW_MESSAGE;
 
-                            vscode.window
-                                  .showInformationMessage(`You are running new version ${sc_helpers.toStringSafe(currentVersion)} of 'vs-script-commands'`,
-                                                          changeLogBtn)
-                                  .then((item) => {
-                                            if (!item) {
-                                                return;
-                                            }
+            if (SHOW_MESSAGE) {
+                const BTN = await vscode.window.showWarningMessage(
+                    "[vs-script-commands] The extension has been DEPRECATED. You can try out 'vscode-powertools' for the future ...",
+                    "Open 'vscode-powertools'", "Maybe next time", "Do not show again"
+                );
 
-                                            try {
-                                                item.action();
-                                            }
-                                            catch (e) { 
-                                                me.log(`[ERROR] Deployer.showNewVersionPopup(4): ${sc_helpers.toStringSafe(e)}`);
-                                            }
-                                        }, (err) => {
-                                            me.log(`[ERROR] Deployer.showNewVersionPopup(3): ${sc_helpers.toStringSafe(err)}`);
-                                        });
-                        }
-                    }
-                }
-                catch (e) { 
-                    me.log(`[ERROR] Deployer.showNewVersionPopup(2): ${sc_helpers.toStringSafe(e)}`);
+                if ('Maybe next time' === BTN) {
+                    newShowMessageValue = true;
+                } else {
+                    newShowMessageValue = false;
                 }
 
-                if (updateCurrentVersion) {
-                    // update last known version
-                    try {
-                        this._CONTEXT.globalState.update(KEY_LAST_KNOWN_VERSION, currentVersion);
-                    }
-                    catch (e) {
-                        me.log(`[ERROR] Deployer.showNewVersionPopup(1): ${sc_helpers.toStringSafe(e)}`);
-                    }
+                if ("Open 'vscode-powertools'" === BTN) {
+                    await sc_helpers.open('https://marketplace.visualstudio.com/items?itemName=ego-digital.vscode-powertools');
                 }
             }
+        } catch (e) {
+            this.log(`[ERROR] Controller.showDeprecatedMessage(1): ${sc_helpers.toStringSafe(e)}`);
+        } finally {
+            try {
+                await this._CONTEXT.globalState.update(
+                    KEY_SHOW_DEPRECATED_MESSAGE,
+                    newShowMessageValue
+                );
+            } catch { }
         }
     }
 }

@@ -1,4 +1,9 @@
-# Change Log (vs-script-commands)
+# [DEPRECATED] Change Log (vs-script-commands)
+
+## 8.0.0 (January 9th, 2019; FINAL VERSION => DEPRECATED)
+
+* **the extension is now marked as DEPRECATED ... it is RECOMMENDED to use [vscode-powertools](https://marketplace.visualstudio.com/items?itemName=ego-digital.vscode-powertools) by [e.GO Digital](https://github.com/egodigital)**
+* if you have suggestions and other kind of issues for that new extension, feel free to [open an issue here](https://github.com/egodigital/vscode-powertools/issues)
 
 ## 7.0.0 (January 6th, 2017; npm packages)
 
